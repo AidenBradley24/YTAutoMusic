@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TagLib;
 
 namespace YTAutoMusic
 {
@@ -47,8 +48,6 @@ namespace YTAutoMusic
 
             //
 
-            Environment.Exit(1);
-
             try
             {
                 var ytDLP = new Process();
@@ -63,14 +62,104 @@ namespace YTAutoMusic
                 Console.WriteLine(tempDirectory);
 
                 var files = tempDirectory.EnumerateFiles();
-                var matches = files.Where(f => f.Name.Contains($"[{playlistID}]"));
+                var descriptionFiles = files.Where(f => f.Name.EndsWith(".description"));
+                var soundFiles = files.Where(f => !f.Name.EndsWith(".description"));
+
+                var matches = descriptionFiles.Where(f => f.Name.Contains($"[{playlistID}]"));
+                
+                string playlistName;
+                if(!matches.Any())
+                {
+                    Console.WriteLine("No name found giving default name.");
+                    playlistName = "Playlist #" + playlistID;
+                }
+                else
+                {
+                    var file = matches.First();
+
+                    playlistName = GetNameWithoutURLTag(file.Name);
+                    var invalids = Path.GetInvalidFileNameChars();
+                    playlistName = string.Join("_", playlistName.Split(invalids, StringSplitOptions.RemoveEmptyEntries)).TrimEnd('.');
+                }
+
+                Console.WriteLine($"Creating Playlist \"{playlistName}\"");
+                var finalDirectory = Directory.CreateDirectory(baseDirectory + @$"\{playlistName}");
+
+                var ffmpeg = new Process();
+                ffmpeg.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%PROGRAMFILES%\ffmpeg\ffmpeg.exe");         
+
+                List<FileInfo> newSound = new List<FileInfo>(soundFiles.Count());
+                foreach(var sound in soundFiles)
+                {
+                    ffmpeg.StartInfo.Arguments = $"-i {sound.FullName} {finalDirectory + @$"\{sound.Name[..sound.Name.LastIndexOf('.')]}.mp3"}";
+                    ffmpeg.Start();
+                    ffmpeg.WaitForExit();
+                }
+
+                foreach (var sound in newSound)
+                {
+                    Console.WriteLine(sound.FullName);
+
+                    var rawName = sound.Name[..sound.Name.LastIndexOf('.')];
+
+                    matches = descriptionFiles.Where(f => f.Name[..f.Name.LastIndexOf('.')] == rawName);
+                    var id = GetURLTag(rawName);
+
+                    Console.WriteLine($"Formatting '{rawName}' ; ID: '{id}'");
+
+                    if (!matches.Any())
+                    {
+                        Console.WriteLine($"No name found for \"{rawName}\" giving defaults.");
+                        playlistName = $"Playlist [{playlistID}]";
+
+                        var file = TagLib.File.Create(sound.FullName);
+                        file.Tag.DateTagged = DateTime.Now;
+
+                        string description = $"Created from a YouTube video." +
+                            $"URL: youtube.com/watch?v={id}\n";
+
+                        using (var stream = descriptionFiles.Where(f => f.Name.Contains($"[{id}]")).First().OpenText())
+                        {
+                            string addition = stream.ReadToEnd();
+                            if (!string.IsNullOrEmpty(addition))
+                            {
+                                description += $"\n--- ORIGINAL DESCRIPTION ---\n" + addition;
+                            }
+                        }
+
+                        file.Tag.Description = description;
+                        file.Tag.Album = playlistName;
+                        file.Tag.Title = GetNameWithoutURLTag(sound.Name);
+                    }
+                    else
+                    {
+                        var file = matches.First();
+                        string tempName = file.Name;
+                        playlistName = tempName[..tempName.LastIndexOf('[')];
+                        var invalids = Path.GetInvalidFileNameChars();
+                        playlistName = string.Join("_", playlistName.Split(invalids, StringSplitOptions.RemoveEmptyEntries)).TrimEnd('.');
+                    }
+                }
+
+                tempDirectory.Delete(true);
             }
             catch (Exception ex)
             {
                 Console.WriteLine("An error has occured!");
                 Console.WriteLine(ex.ToString());
                 Environment.Exit(1);
+                tempDirectory.Delete(true);
             }
+        }
+
+        private static string GetNameWithoutURLTag(string name)
+        {
+            return name[..name.LastIndexOf('[')].Trim();
+        }
+
+        private static string GetURLTag(string name)
+        {
+            return name[(name.LastIndexOf('[')+1)..name.LastIndexOf(']')];
         }
     }
 }
