@@ -4,11 +4,11 @@ using System.Diagnostics;
 
 namespace YTAutoMusic
 {
-    internal class PlaylistBundle
+    internal static class PlaylistBundle
     {
         static readonly string LIST_URL = "?list=";
 
-        public PlaylistBundle()
+        public static void Create(string dlpPath, string ffmpegPath)
         {
             string folder;
 
@@ -53,7 +53,7 @@ namespace YTAutoMusic
             // use yt-dlp to download from youtube
 
             var ytDLP = new Process();
-            ytDLP.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%PROGRAMFILES%\yt-dlp\yt-dlp.exe");
+            ytDLP.StartInfo.FileName = dlpPath;
             ytDLP.StartInfo.Arguments = $"\"{url}\" -P \"{tempDirectory}\" -f bestaudio --no-overwrites --yes-playlist --no-write-comments --write-description --write-playlist-metafiles";
             ytDLP.Start();
             ytDLP.WaitForExit();
@@ -84,7 +84,7 @@ namespace YTAutoMusic
             var finalDirectory = Directory.CreateDirectory(baseDirectory + @$"\{playlistName}");
 
             var ffmpeg = new Process();
-            ffmpeg.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%PROGRAMFILES%\ffmpeg\ffmpeg.exe");
+            ffmpeg.StartInfo.FileName = ffmpegPath;
 
             List<(FileInfo, string, string)> newSound = new(soundFiles.Count());
             foreach (var sound in soundFiles)
