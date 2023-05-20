@@ -154,7 +154,7 @@ namespace YTAutoMusic
 
             tempDirectory.Delete(true);
 
-            XspfGen gen = new(playlistName, bundles);
+            XspfBuilder gen = new(playlistName, playlistID, bundles);
             gen.Build(finalDirectory.Parent.FullName);
 
             using (StreamWriter writer = new(finalDirectory.Parent.FullName + @"\description.txt"))
