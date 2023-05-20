@@ -2,7 +2,8 @@
 
 Automaticly download and format a YouTube playlist as mp3 files and create a VLC playlist.
 
-Currently only for Windows
+- Currently doesn't support appending playlists.
+- Currently only for Windows
 
 Required programs to run application:
 - yt-dlp
