@@ -65,11 +65,13 @@ namespace YTAutoMusic
             var matches = descriptionFiles.Where(f => f.Name.Contains($"[{playlistID}]"));
 
             string playlistName;
+            string playlistDescription;
 
             if (!matches.Any())
             {
                 Console.WriteLine("No name found giving default name.");
                 playlistName = $"Playlist [{playlistID}]";
+                playlistDescription = "";
             }
             else
             {
@@ -78,15 +80,18 @@ namespace YTAutoMusic
                 playlistName = GetNameWithoutURLTag(file.Name);
                 var invalids = Path.GetInvalidFileNameChars();
                 playlistName = string.Join("_", playlistName.Split(invalids, StringSplitOptions.RemoveEmptyEntries)).TrimEnd('.');
+
+                using var stream = matches.First().OpenText();
+                playlistDescription = stream.ReadToEnd();
             }
 
             Console.WriteLine($"Creating Playlist \"{playlistName}\"");
-            var finalDirectory = Directory.CreateDirectory(baseDirectory + @$"\{playlistName}");
+            var finalDirectory = Directory.CreateDirectory(baseDirectory + @$"\{playlistName}\tracks");
 
             var ffmpeg = new Process();
             ffmpeg.StartInfo.FileName = ffmpegPath;
 
-            List<(FileInfo, string, string)> newSound = new(soundFiles.Count());
+            List<MusicBundle> bundles = new(soundFiles.Count());
             foreach (var sound in soundFiles)
             {
                 string originalName = sound.FullName;
@@ -104,52 +109,60 @@ namespace YTAutoMusic
                 sound.Delete(); // delete original file
 
                 FileInfo newFile = new(newName);
-                newSound.Add((newFile, GetURLTag(sound.Name), rawName));
+                bundles.Add(new MusicBundle(newFile, GetURLTag(sound.Name), rawName));
             }
 
-            foreach (var bundle in newSound)
+            foreach (var bundle in bundles)
             {
-                (FileInfo sound, string id, string name) = bundle;
-
                 Console.WriteLine();
-                Console.WriteLine($"\n{sound.FullName}");
+                Console.WriteLine($"\n{bundle.File.FullName}");
 
-                Console.WriteLine($"Formatting '{name}' ; ID: '{id}'");
+                Console.WriteLine($"Formatting '{bundle.Title}' ; ID: '{bundle.ID}'");
 
-                var file = TagLib.File.Create(sound.FullName);
+                var file = TagLib.File.Create(bundle.File.FullName, TagLib.ReadStyle.Average);
                 file.Tag.DateTagged = DateTime.Now;
 
                 // youtube description
 
-                matches = descriptionFiles.Where(f => f.Name.Contains($"[{id}]"));
+                matches = descriptionFiles.Where(f => f.Name.Contains($"[{bundle.ID}]"));
 
                 string description = $"Created from a YouTube video." +
-                $"URL: youtube.com/watch?v={id}\n";
+                $"URL: youtube.com/watch?v={bundle.ID}\n";
 
                 if (!matches.Any())
                 {
-                    Console.WriteLine($"No description found for \"{name}\" giving defaults.");
+                    Console.WriteLine($"No description found for \"{bundle.Title}\" giving defaults.");
                 }
                 else
                 {
-                    using (var stream = matches.First().OpenText())
+                    using var stream = matches.First().OpenText();
+                    string addition = stream.ReadToEnd();
+                    if (!string.IsNullOrEmpty(addition))
                     {
-                        string addition = stream.ReadToEnd();
-                        if (!string.IsNullOrEmpty(addition))
-                        {
-                            description += $"\n--- ORIGINAL DESCRIPTION ---\n" + addition;
-                        }
+                        description += $"\n--- ORIGINAL DESCRIPTION ---\n" + addition;
                     }
                 }
 
                 file.Tag.Description = description;
                 file.Tag.Album = playlistName;
-                file.Tag.Title = name;
+                file.Tag.Title = bundle.Title;
+
+                bundle.Length = (long)file.Properties.Duration.TotalMilliseconds;
 
                 file.Save();
             }
 
             tempDirectory.Delete(true);
+
+            XspfGen gen = new(playlistName, bundles);
+            gen.Build(finalDirectory.Parent.FullName);
+
+            using (StreamWriter writer = new(finalDirectory.Parent.FullName + @"\description.txt"))
+            {
+                writer.Write(playlistDescription);
+            }
+
+            Console.WriteLine("\n\nPlaylist creation complete.\n\n");
         }
 
         private static string GetNameWithoutURLTag(string name)
