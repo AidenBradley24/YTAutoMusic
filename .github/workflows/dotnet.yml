@@ -25,6 +25,6 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --configuration Release YTAutoMusic
+        run: dotnet build --configuration Release
       - name: Create the package
-        run: dotnet pack --configuration Release YTAutoMusic
+        run: dotnet pack --configuration Release
