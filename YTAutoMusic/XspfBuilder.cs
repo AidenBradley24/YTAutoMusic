@@ -9,12 +9,9 @@ namespace YTAutoMusic
         private IEnumerable<MusicBundle> bundles;
         private string playlistID;
 
-
         internal string Name { get => name; set => name = value; }
         internal IEnumerable<MusicBundle> Bundles { get => bundles; set => bundles = value; }
         internal string PlaylistID { get => playlistID; set => playlistID = value; }
-
-        public XspfBuilder() { }
 
         public XspfBuilder(string name, string playlistID, IEnumerable<MusicBundle> bundles)
         {
@@ -78,7 +75,6 @@ namespace YTAutoMusic
                    new XElement(ns + "track", new object[] {
                        new XElement(ns + "location", location),
                        new XElement(ns + "title", bundle.Title),
-                       new XElement(ns + "duration", bundle.Length),
                        new XElement(ns + "info", ytURL),
                        extension
                    })

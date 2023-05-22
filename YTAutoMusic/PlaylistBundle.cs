@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 namespace YTAutoMusic
 {
@@ -92,6 +93,8 @@ namespace YTAutoMusic
             ffmpeg.StartInfo.FileName = ffmpegPath;
 
             List<MusicBundle> bundles = new(soundFiles.Count());
+            long dataLength = 0L;
+
             foreach (var sound in soundFiles)
             {
                 string originalName = sound.FullName;
@@ -106,10 +109,11 @@ namespace YTAutoMusic
                 ffmpeg.Start();
                 ffmpeg.WaitForExit();
 
-                sound.Delete(); // delete original file
-
                 FileInfo newFile = new(newName);
-                bundles.Add(new MusicBundle(newFile, GetURLTag(sound.Name), rawName));
+                var bundle = new MusicBundle(newFile, GetURLTag(sound.Name), rawName);
+                dataLength += newFile.Length;
+                sound.Delete(); // delete original file
+                bundles.Add(bundle);
             }
 
             foreach (var bundle in bundles)
@@ -147,9 +151,8 @@ namespace YTAutoMusic
                 file.Tag.Album = playlistName;
                 file.Tag.Title = bundle.Title;
 
-                bundle.Length = (long)file.Properties.Duration.TotalMilliseconds;
-
                 file.Save();
+                file.Dispose();
             }
 
             tempDirectory.Delete(true);
@@ -159,7 +162,15 @@ namespace YTAutoMusic
 
             using (StreamWriter writer = new(finalDirectory.Parent.FullName + @"\description.txt"))
             {
-                writer.Write(playlistDescription);
+                writer.WriteLine(playlistName);
+                writer.WriteLine("\n-_-_-_-_-_-_-_-_-_\n");
+                writer.WriteLine($"Playlist sourced from https://www.youtube.com/playlist?list={playlistID}");
+                writer.WriteLine("\n-_-_-_-_-_-_-_-_-_\n");
+                writer.WriteLine(playlistDescription);
+                writer.WriteLine("\n-_-_-_-_-_-_-_-_-_\n");
+                writer.WriteLine("Stats:");
+                writer.WriteLine($"Track count: {bundles.Count}");
+                writer.WriteLine($"File size: {dataLength / 1000} KB");
             }
 
             Console.WriteLine("\n\nPlaylist creation complete.\n\n");
