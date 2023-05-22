@@ -3,9 +3,15 @@ name: dotnet-builder
 on: [push]
 
 jobs:
+
   build:
 
     runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: YTAutoMusic
+    
     strategy:
       matrix:
         dotnet-version: [ '3.1.x', '6.0.x' ]
@@ -18,7 +24,6 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Install dependencies
         run: dotnet restore
-        working-directory: YTAutoMusic
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Test
