@@ -1,31 +1,27 @@
-name: dotnet-builder
+name: Upload dotnet package
 
-on: [push]
+on:
+  release:
+    types: [created]
 
 jobs:
-
-  build:
-
+  deploy:
     runs-on: ubuntu-latest
-    
     defaults:
       run:
         working-directory: YTAutoMusic
-    
-    strategy:
-      matrix:
-        dotnet-version: [ '3.1.x', '6.0.x' ]
-
+    permissions:
+      packages: write
+      contents: read
     steps:
       - uses: actions/checkout@v3
-      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v3
+      - uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: ${{ matrix.dotnet-version }}
-      - name: Install dependencies
-        run: dotnet restore
-      - name: Build
-        run: dotnet build --configuration Release
+          dotnet-version: '7.0.x' # SDK Version to use.
+          source-url: https://nuget.pkg.github.com/AidenBradley24/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - run: dotnet build --configuration Release
       - name: Create the package
         run: dotnet pack --configuration Release
       - name: Publish the package to GPR
