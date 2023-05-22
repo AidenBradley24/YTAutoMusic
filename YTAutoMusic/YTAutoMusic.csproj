@@ -11,6 +11,7 @@
     <PackageTags>youtube-downloader;music-playlist</PackageTags>
     <Description>Automaticly download and format a YouTube playlist as mp3 files and create a VLC playlist.</Description>
     <Authors>Aiden Bradley</Authors>
+    <Title>YTAutoMusic</Title>
   </PropertyGroup>
 
   <ItemGroup>
