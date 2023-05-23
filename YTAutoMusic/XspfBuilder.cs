@@ -1,28 +1,18 @@
-﻿using System.Text.Encodings.Web;
+﻿using System.Text;
+using System.Text.Encodings.Web;
 using System.Xml.Linq;
+using TagLib.Id3v2;
 
 namespace YTAutoMusic
 {
     internal class XspfBuilder
     {
-        private string name;
-        private IEnumerable<MusicBundle> bundles;
-        private string playlistID;
-
-        internal string Name { get => name; set => name = value; }
-        internal IEnumerable<MusicBundle> Bundles { get => bundles; set => bundles = value; }
-        internal string PlaylistID { get => playlistID; set => playlistID = value; }
-
-        public XspfBuilder(string name, string playlistID, IEnumerable<MusicBundle> bundles)
-        {
-            this.name = name;
-            this.playlistID = playlistID;
-            this.bundles = bundles;
-        }
+        public PlaylistBundle PlaylistBundle { get; set; }
+        public DirectoryInfo TrackDirectory { get; set; }
 
         public bool IsValid()
         {
-            return name != null && bundles != null && playlistID != null;
+            return PlaylistBundle != null && TrackDirectory != null;
         }
 
         public void Build(string path)
@@ -44,38 +34,58 @@ namespace YTAutoMusic
 
             XElement tracklist = new(ns + "trackList");
 
-            playlist.Add(new object[] {
-                new XElement(ns + "title", name),
-                new XElement(ns + "extension", new object[] {
+            playlist.Add(new object[] 
+            {
+                new XElement(ns + "title", PlaylistBundle.Name),
+                new XElement(ns + "extension", new object[] 
+                {
                     new XAttribute("application", "http://www.videolan.org/vlc/playlist/0"),
                     new XElement(vlcNS + "item",
                        new XAttribute("tid", 0)
                     )
                 }),
-                new XElement(ns + "info", $"https://www.youtube.com/playlist?list={playlistID}"),
+                new XElement(ns + "info", $"https://www.youtube.com/playlist?list={PlaylistBundle.ID}"),
                 tracklist,
             });
 
             int counter = 0;
             var url = UrlEncoder.Default;
-            foreach (MusicBundle bundle in bundles)
+
+            foreach (FileInfo file in TrackDirectory.EnumerateFiles())
             {
-                string location = "file:///tracks/" + url.Encode($"{bundle.File.Name}");
+                string location = "file:///tracks/" + url.Encode($"{file.Name}");
 
                 XElement extension = new(ns + "extension");
 
-                extension.Add(new object[] {
+                extension.Add(new object[] 
+                {
                     new XAttribute("application", "http://www.videolan.org/vlc/playlist/0"),
                     new XElement(vlcNS + "id", counter),
                 });
 
-                string ytURL = $"https://www.youtube.com/watch?v={bundle.ID}&list={playlistID}";
+                TagLib.File tagFile = TagLib.File.Create(file.FullName);
 
-                tracklist.Add(new object[] {
-                   new XElement(ns + "track", new object[] {
+                Tag idTag = (Tag)tagFile.GetTag(TagLib.TagTypes.Id3v2); // for reading the youtube id
+                PrivateFrame p = PrivateFrame.Get(idTag, "yt-id", false);
+
+                string info;
+                if(p != null)
+                {
+                    string id = Encoding.Unicode.GetString(p.PrivateData.Data);
+                    info = $"https://www.youtube.com/watch?v={id}&list={PlaylistBundle.ID}";
+                }
+                else
+                {
+                    info = $"Added to playlist without YouTube";
+                }
+
+                tracklist.Add(new object[] 
+                {
+                   new XElement(ns + "track", new object[] 
+                   {
                        new XElement(ns + "location", location),
-                       new XElement(ns + "title", bundle.Title),
-                       new XElement(ns + "info", ytURL),
+                       new XElement(ns + "title", tagFile.Tag.Title),
+                       new XElement(ns + "info", info),
                        extension
                    })
                 });

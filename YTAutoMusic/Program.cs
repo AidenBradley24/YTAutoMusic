@@ -33,9 +33,10 @@
                         Environment.Exit(0);
                         break;
                     case "n":
-                        PlaylistBundle.Create(dlpPath, ffmpegPath);
+                        PlaylistDownloader.Create(dlpPath, ffmpegPath);
                         break;
                     case "a":
+                        PlaylistDownloader.Append(dlpPath, ffmpegPath);
                         break;
                 }
 
