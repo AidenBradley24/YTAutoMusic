@@ -1,13 +1,15 @@
-﻿namespace YTAutoMusic
+﻿using System.Resources;
+using System.Text;
+using static System.Net.Mime.MediaTypeNames;
+
+namespace YTAutoMusic
 {
     internal class Program
     {
         static void Main(string[] args)
         {
             Console.WriteLine();
-            Console.WriteLine("------------------------");
-            Console.WriteLine("YouTube Music Downloader");
-            Console.WriteLine("------------------------");
+            Console.WriteLine(Resources.splash);
             Console.WriteLine();
 
             (string dlpPath, string ffmpegPath) = FindDependencies();
@@ -24,7 +26,7 @@
 
             do
             {
-                Console.WriteLine("What do you want to do?\n'n' - new playlist | 'a' - append playlist | 'q' - quit");
+                Console.WriteLine("What do you want to do?\n'n' - new playlist | 'a' - append playlist | 'q' - quit | 'h' - help");
                 response = Console.ReadLine();
 
                 switch (response)
@@ -37,6 +39,12 @@
                         break;
                     case "a":
                         PlaylistDownloader.Append(dlpPath, ffmpegPath);
+                        break;
+                    case "h":
+                        Console.WriteLine(Resources.helpText);
+                        break;
+                    default:
+                        Console.WriteLine("Invalid Response.\n");
                         break;
                 }
 

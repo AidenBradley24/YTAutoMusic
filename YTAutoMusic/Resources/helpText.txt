@@ -1,0 +1,7 @@
+﻿---------------------
+'n' - new playlist
+Create new playlist from a YouTube playlist. Place files in a new folder.
+---------------------
+'a' - append playlist
+Update a playlist to include new music from YouTube playlist. Requires an existing playlist folder with a 'tracks' folder inside
+---------------------
