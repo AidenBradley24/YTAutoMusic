@@ -1,8 +1,4 @@
-﻿using System.Resources;
-using System.Text;
-using static System.Net.Mime.MediaTypeNames;
-
-namespace YTAutoMusic
+﻿namespace YTAutoMusic
 {
     internal class Program
     {
