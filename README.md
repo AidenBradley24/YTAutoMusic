@@ -9,8 +9,8 @@ Automatically download and format a YouTube playlist as mp3 files and create a V
 - Append existing playlists (you don't need to redownload the entire playlist)
 
 ### Required programs to run application:
-- yt-dlp
-- ffmpeg
+- yt-dlp https://github.com/yt-dlp/yt-dlp
+- ffmpeg https://ffmpeg.org/
 
 Each must be located inside of program files.
 "%PROGRAMFILES%\ffmpeg\ffmpeg.exe"
