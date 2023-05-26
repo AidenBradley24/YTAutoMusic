@@ -1,4 +1,6 @@
-﻿namespace YTAutoMusic
+﻿using System.Formats.Tar;
+
+namespace YTAutoMusic
 {
     internal class Program
     {
@@ -38,6 +40,15 @@
                         break;
                     case "h":
                         Console.WriteLine(Resources.helpText);
+                        break;
+                    case "t":
+                        int index;
+                        string titlePlusDescription = "Bob the Builder OST - We can do it! - nonsense";
+                        bool val = MusicBundle.IsStandaloneWord("OST", titlePlusDescription, out index);
+
+                        Console.WriteLine(MusicBundle.SnipLeftToSeperator(titlePlusDescription, index));
+                        index = MusicBundle.SkipOneSeperatorRight(titlePlusDescription, index);
+                        Console.WriteLine(MusicBundle.SnipRightToSeperator(titlePlusDescription, index));
                         break;
                     default:
                         Console.WriteLine("Invalid Response.\n");

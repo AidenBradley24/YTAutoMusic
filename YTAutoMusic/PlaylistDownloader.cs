@@ -1,12 +1,14 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Diagnostics;
 using System.Text;
 using TagLib.Id3v2;
+using System.Linq;
 
 namespace YTAutoMusic
 {
     internal static class PlaylistDownloader
     {
-        static readonly string LIST_URL = "?list=";
+        static readonly string LIST_URL = "list=";
 
         public static void Create(string dlpPath, string ffmpegPath)
         {
@@ -192,6 +194,8 @@ namespace YTAutoMusic
                 $"https://youtube.com/watch?v={bundle.ID}\n" +
                 $"https://youtube.com/playlist?list={playlist.ID}";
 
+                string originalDescription = "";
+
                 if (!matches.Any())
                 {
                     Console.WriteLine($"No description found for \"{bundle.Title}\" giving defaults.");
@@ -206,9 +210,8 @@ namespace YTAutoMusic
                     }
                 }
 
+                bundle.Auto(file, originalDescription, playlist);
                 file.Tag.Description = description;
-                file.Tag.Album = playlist.Name;
-                file.Tag.Title = bundle.Title;
 
                 Tag idTag = (Tag)file.GetTag(TagLib.TagTypes.Id3v2); // for saving the youtube id
                 PrivateFrame p = PrivateFrame.Get(idTag, "yt-id", true);
@@ -246,8 +249,7 @@ namespace YTAutoMusic
         {
             string playlistName, playlistDescription;
 
-            int listIndex = playlistURL.IndexOf(LIST_URL) + LIST_URL.Length;
-            string playlistID = playlistURL[listIndex..];
+            string playlistID = playlistURL.Split('&').Where(s => s.StartsWith(LIST_URL)).First()[LIST_URL.Length..];
 
             var matches = tempFiles.DescriptionFiles.Where(f => f.Name.Contains($"[{playlistID}]"));
 
