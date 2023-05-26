@@ -24,7 +24,7 @@ namespace YTAutoMusic
 
             bool finished = false;
 
-            if(description.Contains("Provided to YouTube by"))
+            if (description.Contains("Provided to YouTube by"))
             {
                 /*
                  * Provided to YouTube by INSERTCOMPANYHERE
@@ -56,23 +56,70 @@ namespace YTAutoMusic
 
                     tagFile.Tag.Copyright = lines[3].Trim();
 
-                    tagFile.Tag.Year = (uint)DateTime.ParseExact(lines[4].Trim()[14..], "yyyy-MM-dd", CultureInfo.InvariantCulture).Year;
+                    tagFile.Tag.Year = (uint)DateTime.ParseExact(lines[4].Trim()[13..], "yyyy-MM-dd", CultureInfo.InvariantCulture).Year;
 
                     finished = true;
                     Console.WriteLine("Used information provided by YouTube to fill metadata.");
                 }
-                catch
+                catch (Exception e)
                 {
                     Console.WriteLine("Tried to use 'provided by' config. Failed.");
+                    Console.WriteLine(e);
                 }
             }
-            else if(IsStandaloneWord("OST", titlePlusDescription, out int index) || IsStandaloneWord("Soundtrack", titlePlusDescription, out index))
+            else if (IsStandaloneWord("OST", title, out string usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord))
             {
+                var bits = title.Split(seperators, StringSplitOptions.RemoveEmptyEntries);
 
+                int i;
+                for (i = 0; i < bits.Length; i++)
+                {
+                    if (IsStandaloneWord(usedWord, bits[i], out _))
+                    {
+                        break;
+                    }
+                }
 
-                tagFile.Tag.Album = SnipLeftToSeperator(titlePlusDescription, index);
-                index = SkipOneSeperatorRight(titlePlusDescription, index);
-                tagFile.Tag.Title = SnipRightToSeperator(titlePlusDescription, index);
+                int soundtrackIndex = i;
+
+                if (i < bits.Length)
+                {
+                    tagFile.Tag.Album = bits[i].Trim();
+
+                    i++;
+
+                    string t = null;
+
+                    for (; i < bits.Length; i++)
+                    {
+                        string bit = bits[i].Trim(' ', '\n', '\t', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+                        if (string.IsNullOrWhiteSpace(bit))
+                        {
+                            continue;
+                        }
+
+                        t = bit;
+                    }
+
+                    i = soundtrackIndex - 1;
+
+                    if (t == null)
+                    {
+                        for (; i >= 0; i--)
+                        {
+                            string bit = bits[i].Trim(' ', '\n', '\t', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+                            if (string.IsNullOrWhiteSpace(bit))
+                            {
+                                continue;
+                            }
+
+                            t = bit;
+                        }
+                    }
+
+                    tagFile.Tag.Title = t;
+                }
+
                 finished = true;
             }
 
@@ -85,13 +132,7 @@ namespace YTAutoMusic
 
         private static string[] LineifyDescription(string description)
         {
-            string[] lines = description.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            for (int i = 0; i < lines.Length; i++)
-            {
-                lines[i] = lines[i].Trim();
-            }
-
-            return lines;
+            return description.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         }
 
         private static void StandardPerformers(string[] lines, TagLib.File tagFile)
@@ -105,81 +146,29 @@ namespace YTAutoMusic
             tagFile.Tag.Performers = performers;
         }
 
-        public static bool IsStandaloneWord(string word, string sentence, out int index)
+        public static bool IsStandaloneWord(string word, string sentence, out string usedWord)
         {
-            index = sentence.IndexOf(word, StringComparison.OrdinalIgnoreCase);
+            int index = sentence.IndexOf(word, StringComparison.OrdinalIgnoreCase);
+            usedWord = word;
 
-            if(index == -1)
+            if (index == -1)
             {
                 return false;
             }
 
-            if(index != 0 && !char.IsWhiteSpace(sentence[index - 1]))
+            if (index != 0 && !char.IsWhiteSpace(sentence[index - 1]))
             {
                 return false;
             }
 
-            if(index + word.Length < sentence.Length - 1 && !char.IsWhiteSpace(sentence[index + word.Length]))
+            if (index + word.Length < sentence.Length - 1 && !char.IsWhiteSpace(sentence[index + word.Length]))
             {
                 return false;
             }
-
-            index += word.Length;
 
             return true;
         }
 
-        private static readonly HashSet<char> seperators = new(){'-', '\u2012', '\u2013', '\u2014', '\u2015', '(', '[', '{', '|', '·' };
-
-        public static string SnipLeftToSeperator(string text, int rightEdge)
-        {
-            int leftEdge = 0;
-
-            for (int i = rightEdge - 1; i >= 0; i--)
-            {
-                char c = text[i];
-                if(seperators.Contains(c))
-                {
-                    leftEdge = i + 1;
-                }
-            }
-
-            return text[leftEdge..rightEdge].Trim();
-        }
-
-        public static string SnipRightToSeperator(string text, int leftEdge)
-        {
-            int rightEdge = text.Length;
-
-            for (int i = leftEdge; i < text.Length; i++)
-            {
-                char c = text[i];
-                if (seperators.Contains(c))
-                {
-                    rightEdge = i;
-                }
-            }
-
-            return text[leftEdge..rightEdge].Trim();
-        }
-
-        public static int SkipOneSeperatorRight(string text, int index)
-        {
-            for (int i = index; i < text.Length; i++)
-            {
-                char c = text[i];
-                if (seperators.Contains(c))
-                {
-                    if(i + 1 >= text.Length)
-                    {
-                        return index;
-                    }
-
-                    return i + 1;
-                }
-            }
-
-            return index;
-        }
+        private static readonly char[] seperators = { '-', '\u2012', '\u2013', '\u2014', '\u2015', '(', '[', '{', '|', '·' };
     }
 }

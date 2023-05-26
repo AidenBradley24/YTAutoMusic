@@ -203,10 +203,10 @@ namespace YTAutoMusic
                 else
                 {
                     using var stream = matches.First().OpenText();
-                    string addition = stream.ReadToEnd();
-                    if (!string.IsNullOrEmpty(addition))
+                    originalDescription = stream.ReadToEnd();
+                    if (!string.IsNullOrEmpty(originalDescription))
                     {
-                        description += $"\n--- ORIGINAL DESCRIPTION ---\n" + addition;
+                        description += $"\n--- ORIGINAL DESCRIPTION ---\n" + originalDescription;
                     }
                 }
 
