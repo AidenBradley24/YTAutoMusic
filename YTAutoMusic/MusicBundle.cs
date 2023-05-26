@@ -9,7 +9,7 @@ namespace YTAutoMusic
         public FileInfo File { get; private set; }
         public string ID { get; private set; }
 
-        private static readonly char[] seperators = { '-', '\u2012', '\u2013', '\u2014', '\u2015', '(', '[', '{', ')', ']', '}' , '|', '·', '\uFF02', '\u0022', '\u201C', '\u201D', '\u201E', '\u201F' };
+        private static readonly char[] seperators = { '-', '\u2012', '\u2013', '\u2014', '\u2015', '|', '·', '\uFF02', '\u0022', '\u201C', '\u201D', '\u201E', '\u201F' };
 
         public MusicBundle(FileInfo file, string id, string title)
         {
@@ -73,6 +73,10 @@ namespace YTAutoMusic
                     Console.WriteLine(ex);
                 }
             }
+            // TODO add 'From' config
+            /*
+             * Song (From "Album" ... )
+             */
             else if (IsStandaloneWord("OST", title, out string usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord))
             {
                 try

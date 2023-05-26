@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using TagLib.Id3v2;
-using System.Linq;
 
 namespace YTAutoMusic
 {
@@ -24,18 +22,28 @@ namespace YTAutoMusic
                 if (string.IsNullOrWhiteSpace(folder))
                 {
                     folder = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+                    Console.WriteLine(folder);
                 }
 
                 try
                 {
-                    baseDirectory = Directory.CreateDirectory(folder);
-                    break;
+                    folder = Path.GetFullPath(folder);
                 }
                 catch
                 {
-                    Console.WriteLine($"{folder} is not a folder");
+                    Console.WriteLine($"{folder} is not a valid directory.");
                     continue;
                 }
+
+                baseDirectory = Directory.CreateDirectory(folder);
+
+                if (Directory.CreateDirectory(Directory.GetCurrentDirectory()) == baseDirectory)
+                {
+                    Console.WriteLine("Cannot open here.");
+                    continue;
+                }
+
+                break;
             }
 
             string url;
@@ -93,17 +101,44 @@ namespace YTAutoMusic
 
         public static void Append(string dlpPath, string ffmpegPath)
         {
-// TODO append needs to update the description.txt stats
             string folder;
+            DirectoryInfo playlistDirectory;
+
             while (true)
             {
                 Console.WriteLine("Provide playlist folder. (should have xspf file and a 'tracks' folder inside)");
                 folder = Console.ReadLine();
 
-                if (!string.IsNullOrWhiteSpace(folder))
+                if (string.IsNullOrWhiteSpace(folder))
                 {
-                    break;
+                    continue;
                 }
+
+                try
+                {
+                    folder = Path.GetFullPath(folder);
+                }
+                catch
+                {
+                    Console.WriteLine($"{folder} is not a valid directory.");
+                    continue;
+                }
+
+                if (!Directory.Exists(folder + @"\tracks"))
+                {
+                    Console.WriteLine("Playlist folder does not have a 'tracks' folder inside.");
+                    continue;
+                }
+
+                playlistDirectory = Directory.CreateDirectory(folder);
+
+                if (Directory.CreateDirectory(Directory.GetCurrentDirectory()) == playlistDirectory)
+                {
+                    Console.WriteLine("Cannot open here.");
+                    continue;
+                }
+
+                break;
             }
 
             string url;
@@ -118,13 +153,12 @@ namespace YTAutoMusic
                 }
             }
 
-            var playlistDirectory = Directory.CreateDirectory(folder);
             var trackDirectory = Directory.CreateDirectory(playlistDirectory.FullName + @"\tracks");
 
             var tracks = trackDirectory.EnumerateFiles();
 
-            List<string> ids = new List<string>();
-            StringBuilder idFilter = new StringBuilder("--match-filter ");
+            List<string> ids = new();
+            StringBuilder idFilter = new("--match-filter ");
             foreach (var track in tracks)
             {
                 var tagFile = TagLib.File.Create(track.FullName);
@@ -151,7 +185,7 @@ namespace YTAutoMusic
             ytDLP.WaitForExit();
             ytDLP.Dispose();
 
-            TempFileBundle tempFiles = new TempFileBundle(tempDirectory);
+            TempFileBundle tempFiles = new(tempDirectory);
             PlaylistBundle playlistBundle = GetPlaylistInfo(url, tempFiles);
 
             FormatAndPlaceAudio(playlistBundle, tempFiles, trackDirectory, ffmpegPath);
@@ -162,6 +196,8 @@ namespace YTAutoMusic
             Console.WriteLine("\n\nAppend Playlist Complete\n\n");
         }
 
+        private static readonly string ORIGINAL_DESCRIPTION_TAG = "\n--- ORIGINAL DESCRIPTION ---\n";
+
         private static void FormatAndPlaceAudio(PlaylistBundle playlist, TempFileBundle tempFiles, DirectoryInfo finalDirectory, string ffmpegPath)
         {
             var ffmpeg = new Process();
@@ -169,6 +205,44 @@ namespace YTAutoMusic
 
             List<MusicBundle> bundles = new(tempFiles.AudioFiles.Count());
             long dataLength = 0L;
+            TimeSpan totalDuration = TimeSpan.Zero;
+
+            foreach (var file in finalDirectory.EnumerateFiles())
+            {
+                var tagFile = TagLib.File.Create(file.FullName);
+
+                Console.WriteLine(file.FullName);
+                Console.WriteLine("Grabbing existing file.");
+
+                Tag idTag = (Tag)tagFile.GetTag(TagLib.TagTypes.Id3v2); // for reading the youtube id
+                PrivateFrame p = PrivateFrame.Get(idTag, "yt-id", false);
+
+                string id;
+                if (p != null)
+                {
+                    id = Encoding.Unicode.GetString(p.PrivateData.Data);
+                }
+                else
+                {
+                    id = "";   
+                }
+
+                var bundle = new MusicBundle(file, id, file.Name[..^".mp3".Length]);
+                string description = tagFile.Tag.Description;
+                string originalDescription = description[(description.IndexOf(ORIGINAL_DESCRIPTION_TAG) + ORIGINAL_DESCRIPTION_TAG.Length)..];
+
+                bundle.Auto(tagFile, originalDescription, playlist);
+
+                var duration = tagFile.Properties.Duration;
+                totalDuration += duration;
+
+                tagFile.Tag.Length = duration.ToString(@"hh\:mm\:ss");
+
+                bundles.Add(bundle);
+
+                tagFile.Save();
+                tagFile.Dispose();
+            }
 
             foreach (var sound in tempFiles.AudioFiles)
             {
@@ -191,8 +265,6 @@ namespace YTAutoMusic
                 bundles.Add(bundle);
             }
 
-            TimeSpan totalDuration = TimeSpan.Zero;
-
             foreach (var bundle in bundles)
             {
                 Console.WriteLine();
@@ -207,7 +279,7 @@ namespace YTAutoMusic
 
                 var matches = tempFiles.DescriptionFiles.Where(f => f.Name.Contains($"[{bundle.ID}]"));
 
-                string description = $"Created from a YouTube music playlist." +
+                string description = $"Created from a YouTube music playlist.\n" +
                 $"https://youtube.com/watch?v={bundle.ID}\n" +
                 $"https://youtube.com/playlist?list={playlist.ID}";
 
@@ -223,7 +295,7 @@ namespace YTAutoMusic
                     originalDescription = stream.ReadToEnd();
                     if (!string.IsNullOrEmpty(originalDescription))
                     {
-                        description += $"\n--- ORIGINAL DESCRIPTION ---\n" + originalDescription;
+                        description += ORIGINAL_DESCRIPTION_TAG + originalDescription;
                     }
                 }
 
