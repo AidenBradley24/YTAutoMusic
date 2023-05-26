@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 
 namespace YTAutoMusic
 {
@@ -9,6 +8,8 @@ namespace YTAutoMusic
         public string Title { get; private set; }
         public FileInfo File { get; private set; }
         public string ID { get; private set; }
+
+        private static readonly char[] seperators = { '-', '\u2012', '\u2013', '\u2014', '\u2015', '(', '[', '{', ')', ']', '}' , '|', '·', '\uFF02', '\u0022', '\u201C', '\u201D', '\u201E', '\u201F' };
 
         public MusicBundle(FileInfo file, string id, string title)
         {
@@ -35,7 +36,7 @@ namespace YTAutoMusic
                  * 
                  * ℗
                  * 
-                 * Relesased on: YYYY-MM-DD
+                 * Released on: YYYY-MM-DD
                  * 
                  * ...
                  * 
@@ -50,8 +51,13 @@ namespace YTAutoMusic
 
                     tagFile.Tag.Title = title;
 
-                    StandardPerformers(lines, tagFile);
+                    string[] performers = lines[1].Split('·')[1..];
+                    for (int i = 0; i < performers.Length; i++)
+                    {
+                        performers[i] = performers[i].Trim();
+                    }
 
+                    tagFile.Tag.Performers = performers;
                     tagFile.Tag.Album = lines[2].Trim();
 
                     tagFile.Tag.Copyright = lines[3].Trim();
@@ -61,52 +67,61 @@ namespace YTAutoMusic
                     finished = true;
                     Console.WriteLine("Used information provided by YouTube to fill metadata.");
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
                     Console.WriteLine("Tried to use 'provided by' config. Failed.");
-                    Console.WriteLine(e);
+                    Console.WriteLine(ex);
                 }
             }
             else if (IsStandaloneWord("OST", title, out string usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord))
             {
-                var bits = title.Split(seperators, StringSplitOptions.RemoveEmptyEntries);
-
-                int i;
-                for (i = 0; i < bits.Length; i++)
+                try
                 {
-                    if (IsStandaloneWord(usedWord, bits[i], out _))
+                    var bits = title.Split(seperators, StringSplitOptions.RemoveEmptyEntries);
+
+                    int i;
+                    for (i = 0; i < bits.Length; i++)
                     {
-                        break;
-                    }
-                }
-
-                int soundtrackIndex = i;
-
-                if (i < bits.Length)
-                {
-                    tagFile.Tag.Album = bits[i].Trim();
-
-                    i++;
-
-                    string t = null;
-
-                    for (; i < bits.Length; i++)
-                    {
-                        string bit = bits[i].Trim(' ', '\n', '\t', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
-                        if (string.IsNullOrWhiteSpace(bit))
+                        if (IsStandaloneWord(usedWord, bits[i], out _))
                         {
-                            continue;
+                            break;
+                        }
+                    }
+
+                    int soundtrackIndex = i;
+
+                    if (i < bits.Length)
+                    {
+                        string album = bits[i].Trim();
+                        int blacklist = -1;
+
+                        if (album == usedWord)
+                        {
+                            i--;
+                            if (i < 0)
+                            {
+                                throw new IndexOutOfRangeException("Can't find soundtrack name");
+                            }
+
+                            blacklist = i;
+
+                            album = bits[i].Trim();
+                            if(album.Length == 0)
+                            {
+                                throw new FormatException("Can't find soundtrack name");
+                            }
                         }
 
-                        t = bit;
-                    }
+                        tagFile.Tag.Album = album;
 
-                    i = soundtrackIndex - 1;
+                        i++;
 
-                    if (t == null)
-                    {
-                        for (; i >= 0; i--)
+                        string t = null;
+
+                        for (; i < bits.Length; i++)
                         {
+                            if (i == blacklist) continue;
+
                             string bit = bits[i].Trim(' ', '\n', '\t', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
                             if (string.IsNullOrWhiteSpace(bit))
                             {
@@ -115,35 +130,49 @@ namespace YTAutoMusic
 
                             t = bit;
                         }
+
+                        i = soundtrackIndex - 1;
+
+                        if (t == null)
+                        {
+                            for (; i >= 0; i--)
+                            {
+                                if (i == blacklist) continue;
+
+                                string bit = bits[i].Trim(' ', '\n', '\t', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+                                if (string.IsNullOrWhiteSpace(bit))
+                                {
+                                    continue;
+                                }
+
+                                t = bit;
+                            }
+                        }
+
+                        tagFile.Tag.Title = t;
                     }
 
-                    tagFile.Tag.Title = t;
+                    tagFile.Tag.Genres = new string[]{ "Soundtrack" };
+                    finished = true;
+                    Console.WriteLine("Parsed YT title to fill metadata.");
                 }
-
-                finished = true;
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Tried to use 'OST / soundtrack' config. Failed.");
+                    Console.WriteLine(ex);
+                }
             }
 
             if (!finished)
             {
                 tagFile.Tag.Title = title;
-                tagFile.Tag.Album = playlist.Name;
+                tagFile.Tag.Album = "";
             }
         }
 
         private static string[] LineifyDescription(string description)
         {
             return description.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        }
-
-        private static void StandardPerformers(string[] lines, TagLib.File tagFile)
-        {
-            string[] performers = lines[1].Split('·')[1..];
-            for (int i = 0; i < performers.Length; i++)
-            {
-                performers[i] = performers[i].Trim();
-            }
-
-            tagFile.Tag.Performers = performers;
         }
 
         public static bool IsStandaloneWord(string word, string sentence, out string usedWord)
@@ -156,19 +185,17 @@ namespace YTAutoMusic
                 return false;
             }
 
-            if (index != 0 && !char.IsWhiteSpace(sentence[index - 1]))
+            if (index != 0 && char.IsLetterOrDigit(sentence[index - 1]))
             {
                 return false;
             }
 
-            if (index + word.Length < sentence.Length - 1 && !char.IsWhiteSpace(sentence[index + word.Length]))
+            if (index + word.Length < sentence.Length - 1 && char.IsLetterOrDigit(sentence[index + word.Length]))
             {
                 return false;
             }
 
             return true;
         }
-
-        private static readonly char[] seperators = { '-', '\u2012', '\u2013', '\u2014', '\u2015', '(', '[', '{', '|', '·' };
     }
 }

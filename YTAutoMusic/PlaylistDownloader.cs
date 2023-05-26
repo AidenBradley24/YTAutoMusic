@@ -14,15 +14,29 @@ namespace YTAutoMusic
         {
             string folder;
 
-            Console.WriteLine("Provide root path. Insert nothing to put in music directory.");
-            folder = Console.ReadLine();
+            DirectoryInfo baseDirectory;
 
-            if (string.IsNullOrWhiteSpace(folder))
+            while (true)
             {
-                folder = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
-            }
+                Console.WriteLine("Provide root path. Insert nothing to put in music directory.");
+                folder = Console.ReadLine();
 
-            var baseDirectory = Directory.CreateDirectory(folder);
+                if (string.IsNullOrWhiteSpace(folder))
+                {
+                    folder = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+                }
+
+                try
+                {
+                    baseDirectory = Directory.CreateDirectory(folder);
+                    break;
+                }
+                catch
+                {
+                    Console.WriteLine($"{folder} is not a folder");
+                    continue;
+                }
+            }
 
             string url;
             int listIndex;
@@ -79,6 +93,7 @@ namespace YTAutoMusic
 
         public static void Append(string dlpPath, string ffmpegPath)
         {
+// TODO append needs to update the description.txt stats
             string folder;
             while (true)
             {
@@ -176,6 +191,8 @@ namespace YTAutoMusic
                 bundles.Add(bundle);
             }
 
+            TimeSpan totalDuration = TimeSpan.Zero;
+
             foreach (var bundle in bundles)
             {
                 Console.WriteLine();
@@ -213,6 +230,11 @@ namespace YTAutoMusic
                 bundle.Auto(file, originalDescription, playlist);
                 file.Tag.Description = description;
 
+                var duration = file.Properties.Duration;
+                totalDuration += duration;
+
+                file.Tag.Length = duration.ToString(@"hh\:mm\:ss");
+
                 Tag idTag = (Tag)file.GetTag(TagLib.TagTypes.Id3v2); // for saving the youtube id
                 PrivateFrame p = PrivateFrame.Get(idTag, "yt-id", true);
                 p.PrivateData = Encoding.Unicode.GetBytes(bundle.ID);
@@ -224,14 +246,15 @@ namespace YTAutoMusic
             using (StreamWriter writer = new(finalDirectory.Parent.FullName + @"\description.txt"))
             {
                 writer.WriteLine(playlist.Name);
-                writer.WriteLine("\n-_-_-_-_-_-_-_-_-_\n");
+                writer.WriteLine("\n------------------\n");
                 writer.WriteLine($"Playlist sourced from https://www.youtube.com/playlist?list={playlist.ID}");
-                writer.WriteLine("\n-_-_-_-_-_-_-_-_-_\n");
+                writer.WriteLine("\n------------------\n");
                 writer.WriteLine(playlist.Description);
-                writer.WriteLine("\n-_-_-_-_-_-_-_-_-_\n");
+                writer.WriteLine("\n------------------\n");
                 writer.WriteLine("Stats:");
                 writer.WriteLine($"Track count: {bundles.Count}");
                 writer.WriteLine($"File size: {dataLength / 1000} KB");
+                writer.WriteLine($"Playlist duration: {totalDuration:hh\\:mm\\:ss}");
             }
         }
 
@@ -249,7 +272,16 @@ namespace YTAutoMusic
         {
             string playlistName, playlistDescription;
 
-            string playlistID = playlistURL.Split('&').Where(s => s.StartsWith(LIST_URL)).First()[LIST_URL.Length..];
+            string playlistID;
+            if (playlistURL.Contains('&'))
+            {
+                playlistID = playlistURL.Split('&').Where(s => s.StartsWith(LIST_URL)).First()[LIST_URL.Length..];
+            }
+            else
+            {
+                int listIndex = playlistURL.IndexOf(LIST_URL) + LIST_URL.Length;
+                playlistID = playlistURL[listIndex..];
+            }
 
             var matches = tempFiles.DescriptionFiles.Where(f => f.Name.Contains($"[{playlistID}]"));
 
