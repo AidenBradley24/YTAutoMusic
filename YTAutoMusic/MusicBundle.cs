@@ -9,7 +9,11 @@ namespace YTAutoMusic
         public FileInfo File { get; private set; }
         public string ID { get; private set; }
 
-        private static readonly char[] seperators = { '-', '\u2012', '\u2013', '\u2014', '\u2015', '|', '·', '\uFF02', '\u0022', '\u201C', '\u201D', '\u201E', '\u201F' };
+        private static readonly char[] SEPERATORS = { '-', '\u2012', '\u2013', '\u2014', '\u2015', '|', '·', '\uFF02', '\u0022', '\u201C', '\u201D', '\u201E', '\u201F' };
+
+        private static readonly char[] QUOTES = { '\u0022', '\u00AB', '\u00BB', '\u201C', '\u201D', '\u201E', '\uFF02' };
+
+        private static readonly char[] CLEAN_UP_TRIM = { ' ', '\n', '\t', '\r', '.', ':', '\uFF1A', '-', '\u2012', '\u2013', '\u2014', '\u2015', '|', '·', '\uFF02', '\u0022', '\u201C', '\u201D', '\u201E', '\u201F' };
 
         public MusicBundle(FileInfo file, string id, string title)
         {
@@ -73,15 +77,46 @@ namespace YTAutoMusic
                     Console.WriteLine(ex);
                 }
             }
-            // TODO add 'From' config
-            /*
-             * Song (From "Album" ... )
-             */
-            else if (IsStandaloneWord("OST", title, out string usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord))
+
+            if (!finished && IsStandaloneWord("From", title, out string usedWord))
             {
                 try
                 {
-                    var bits = title.Split(seperators, StringSplitOptions.RemoveEmptyEntries);
+                    if(!title.Contains($"({usedWord}", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw new FormatException("Not real from config");
+                    }
+
+                    string[] bits = title.Split("(", StringSplitOptions.TrimEntries);
+
+                    string t = bits[0].Trim();
+                    string a = bits[1][usedWord.Length..^1];
+
+                    foreach(char q in QUOTES)
+                    {
+                        a = a.Replace(q.ToString(), "");
+                    }
+
+                    a = a.Trim();
+
+                    tagFile.Tag.Title = t;
+                    tagFile.Tag.Album = a;
+
+                    finished = true;
+                    Console.WriteLine("Parsed YT title to fill metadata. (from config)");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Tried to use 'from' config. Failed.");
+                    Console.WriteLine(ex);
+                }
+            }
+
+            if (!finished && (IsStandaloneWord("OST", title, out usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord)))
+            {
+                try
+                {
+                    var bits = title.Split(SEPERATORS, StringSplitOptions.RemoveEmptyEntries);
 
                     int i;
                     for (i = 0; i < bits.Length; i++)
@@ -96,7 +131,7 @@ namespace YTAutoMusic
 
                     if (i < bits.Length)
                     {
-                        string album = bits[i].Trim();
+                        string album = bits[i].Trim().Trim(CLEAN_UP_TRIM);
                         int blacklist = -1;
 
                         if (album == usedWord)
@@ -153,16 +188,18 @@ namespace YTAutoMusic
                             }
                         }
 
+                        t = t.Trim(CLEAN_UP_TRIM);
+                        
                         tagFile.Tag.Title = t;
                     }
 
                     tagFile.Tag.Genres = new string[]{ "Soundtrack" };
                     finished = true;
-                    Console.WriteLine("Parsed YT title to fill metadata.");
+                    Console.WriteLine("Parsed YT title to fill metadata. (soundtrack config)");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Tried to use 'OST / soundtrack' config. Failed.");
+                    Console.WriteLine("Tried to use 'soundtrack' config. Failed.");
                     Console.WriteLine(ex);
                 }
             }
