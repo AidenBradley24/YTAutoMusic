@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Diagnostics;
 using System.Text;
 using TagLib.Id3v2;
 
@@ -200,10 +201,7 @@ namespace YTAutoMusic
 
         private static void FormatAndPlaceAudio(PlaylistBundle playlist, TempFileBundle tempFiles, DirectoryInfo finalDirectory, string ffmpegPath)
         {
-            var ffmpeg = new Process();
-            ffmpeg.StartInfo.FileName = ffmpegPath;
-
-            List<MusicBundle> bundles = new(tempFiles.AudioFiles.Count());
+            int trackCount = 0;
             long dataLength = 0L;
             TimeSpan totalDuration = TimeSpan.Zero;
 
@@ -238,32 +236,20 @@ namespace YTAutoMusic
                 var duration = tagFile.Properties.Duration;
                 totalDuration += duration;
 
+                trackCount++;
+
                 tagFile.Tag.Length = duration.ToString(@"hh\:mm\:ss");
 
                 tagFile.Save();
                 tagFile.Dispose();
             }
 
-            foreach (var sound in tempFiles.AudioFiles)
-            {
-                string originalName = sound.FullName;
-                string rawName = GetNameWithoutURLTag(sound.Name);
-                string newName = finalDirectory + @$"\{rawName}.mp3";
+            ConversionHandeler conversion = new(tempFiles.AudioFiles, finalDirectory.FullName, ffmpegPath);
 
-                Console.WriteLine($"\n\nConverting to mp3: '{originalName}'\n" +
-                    $"\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\n" +
-                    $"'{newName}'\n");
+            Task conversionTask = conversion.Convert();
+            conversionTask.Wait();
 
-                ffmpeg.StartInfo.Arguments = $"-i \"{originalName}\" \"{newName}\"";
-                ffmpeg.Start();
-                ffmpeg.WaitForExit();
-
-                FileInfo newFile = new(newName);
-                var bundle = new MusicBundle(newFile, GetURLTag(sound.Name), rawName);
-                dataLength += newFile.Length;
-                sound.Delete(); // delete original file
-                bundles.Add(bundle);
-            }
+            var bundles = conversion.GetMusicBundles();
 
             foreach (var bundle in bundles)
             {
@@ -271,6 +257,8 @@ namespace YTAutoMusic
                 Console.WriteLine($"\n{bundle.File.FullName}");
 
                 Console.WriteLine($"Formatting '{bundle.Title}' ; ID: '{bundle.ID}'");
+
+                dataLength += bundle.File.Length;
 
                 var file = TagLib.File.Create(bundle.File.FullName, TagLib.ReadStyle.Average);
                 file.Tag.DateTagged = DateTime.Now;
@@ -307,6 +295,8 @@ namespace YTAutoMusic
 
                 file.Tag.Length = duration.ToString(@"hh\:mm\:ss");
 
+                trackCount++;
+
                 Tag idTag = (Tag)file.GetTag(TagLib.TagTypes.Id3v2); // for saving the youtube id
                 PrivateFrame p = PrivateFrame.Get(idTag, "yt-id", true);
                 p.PrivateData = Encoding.Unicode.GetBytes(bundle.ID);
@@ -324,18 +314,18 @@ namespace YTAutoMusic
                 writer.WriteLine(playlist.Description);
                 writer.WriteLine("\n------------------\n");
                 writer.WriteLine("Stats:");
-                writer.WriteLine($"Track count: {bundles.Count}");
+                writer.WriteLine($"Track count: {trackCount}");
                 writer.WriteLine($"File size: {dataLength / 1000} KB");
                 writer.WriteLine($"Playlist duration: {totalDuration:hh\\:mm\\:ss}");
             }
         }
 
-        private static string GetNameWithoutURLTag(string name)
+        public static string GetNameWithoutURLTag(string name)
         {
             return name[..name.LastIndexOf('[')].Trim();
         }
 
-        private static string GetURLTag(string name)
+        public static string GetURLTag(string name)
         {
             return name[(name.LastIndexOf('[') + 1)..name.LastIndexOf(']')];
         }
