@@ -71,7 +71,7 @@ namespace YTAutoMusic
                 break;
             }
 
-            var tempDirectory = Directory.CreateDirectory(folder + @"\temp");
+            var tempDirectory = Directory.CreateTempSubdirectory("download");
 
             // use yt-dlp to download from youtube
 
@@ -176,7 +176,7 @@ namespace YTAutoMusic
             string filter = idFilter.ToString()[..^1];
 
             // use yt-dlp to download from youtube
-            var tempDirectory = Directory.CreateDirectory(playlistDirectory.FullName + @"\temp");
+            var tempDirectory = Directory.CreateTempSubdirectory("download");
 
             var ytDLP = new Process();
             ytDLP.StartInfo.FileName = dlpPath;
@@ -211,8 +211,10 @@ namespace YTAutoMusic
             {
                 var tagFile = TagLib.File.Create(file.FullName);
 
+                Console.WriteLine();
                 Console.WriteLine(file.FullName);
                 Console.WriteLine("Grabbing existing file.");
+                Console.WriteLine();
 
                 Tag idTag = (Tag)tagFile.GetTag(TagLib.TagTypes.Id3v2); // for reading the youtube id
                 PrivateFrame p = PrivateFrame.Get(idTag, "yt-id", false);
@@ -237,8 +239,6 @@ namespace YTAutoMusic
                 totalDuration += duration;
 
                 tagFile.Tag.Length = duration.ToString(@"hh\:mm\:ss");
-
-                bundles.Add(bundle);
 
                 tagFile.Save();
                 tagFile.Dispose();

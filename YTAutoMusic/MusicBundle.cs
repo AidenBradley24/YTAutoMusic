@@ -112,7 +112,7 @@ namespace YTAutoMusic
                 }
             }
 
-            if (!finished && (IsStandaloneWord("OST", title, out usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord)))
+            if (!finished && (IsStandaloneWord("OST", title, out usedWord) || IsStandaloneWord("O.S.T.", title, out usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord)))
             {
                 try
                 {
@@ -188,6 +188,11 @@ namespace YTAutoMusic
                             }
                         }
 
+                        if(t == null)
+                        {
+                            throw new FormatException("Title failed");
+                        }
+
                         t = t.Trim(CLEAN_UP_TRIM);
                         
                         tagFile.Tag.Title = t;
@@ -204,6 +209,48 @@ namespace YTAutoMusic
                 }
             }
 
+            if(!finished && (IsWord("Music ", description, out usedWord) || IsWord("Title ", description, out usedWord)))
+            {
+                try
+                {
+                    var lines = LineifyDescription(description).AsEnumerable();
+
+                    var possibleLines = lines.Where(l => l.StartsWith(usedWord, StringComparison.InvariantCultureIgnoreCase));
+                    if (!possibleLines.Any())
+                    {
+                        throw new FormatException("Not real 'music description'");
+                    }
+
+                    string titleLine = possibleLines.First();
+                    titleLine = titleLine[usedWord.Length..];
+
+                    (string t, string a) = SplitFirst(titleLine);
+
+                    t = t.Trim(CLEAN_UP_TRIM);
+                    a = a.Trim(CLEAN_UP_TRIM);
+
+                    if (string.IsNullOrWhiteSpace(a))
+                    {
+                        tagFile.Tag.Title = t;
+                        tagFile.Tag.Album = "";
+                    }
+                    else
+                    {
+                        tagFile.Tag.Title = t;
+                        tagFile.Tag.Album = a;
+                    }
+
+                    finished = true;
+                    Console.WriteLine("Parsed YT description to fill metadata. (music description config)");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Tried to use 'music description' config. Failed.");
+                    Console.WriteLine(ex);
+                }
+
+            }
+
             if (!finished)
             {
                 tagFile.Tag.Title = title;
@@ -216,6 +263,13 @@ namespace YTAutoMusic
             return description.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         }
 
+        /// <summary>
+        /// Check for if word is inside sentence. Insures that word is isolated with only whitespace, an edge, or symbols surounding it.
+        /// </summary>
+        /// <param name="word">Word to check</param>
+        /// <param name="sentence">Sentence to check for word</param>
+        /// <param name="usedWord">Returns given work back. (To determine which word was used out of many)</param>
+        /// <returns></returns>
         public static bool IsStandaloneWord(string word, string sentence, out string usedWord)
         {
             int index = sentence.IndexOf(word, StringComparison.OrdinalIgnoreCase);
@@ -237,6 +291,47 @@ namespace YTAutoMusic
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Calls the 'contains' method on sentence with InvariantCultureIgnoreCase. In same format as IsStandaloneWord.
+        /// </summary>
+        /// <param name="word">Word to check</param>
+        /// <param name="sentence">Sentence to check for word</param>
+        /// <param name="usedWord">Returns given work back. (To determine which word was used out of many)</param>
+        /// <returns></returns>
+        public static bool IsWord(string word, string sentence, out string usedWord)
+        {
+            usedWord = word;
+
+            if (sentence.Contains(word, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Split a sentence by only the first divider. If there is no split, second half will be "".
+        /// </summary>
+        /// <param name="sentence">Sentence to split</param>
+        /// <returns>(first half, second half)</returns>
+        public static (string, string) SplitFirst(string sentence)
+        {
+            for (int i = 0; i < sentence.Length; i++)
+            {
+                char c = sentence[i];
+                if(SEPERATORS.Contains(c))
+                {
+                    string first = sentence[..i].Trim();
+                    string last = sentence[(i + 1)..].Trim();
+
+                    return (first, last);
+                }
+            }
+
+            return (sentence.Trim(), "");
         }
     }
 }

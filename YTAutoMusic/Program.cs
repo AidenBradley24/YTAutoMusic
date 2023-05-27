@@ -1,6 +1,4 @@
-﻿using System.Formats.Tar;
-
-namespace YTAutoMusic
+﻿namespace YTAutoMusic
 {
     internal class Program
     {
