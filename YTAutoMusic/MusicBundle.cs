@@ -151,7 +151,27 @@ namespace YTAutoMusic
                             }
                         }
 
-                        tagFile.Tag.Album = album;
+                        if (usedWord == "O.S.T.")
+                        {
+                            album = album.Replace("O.S.T.", "OST");
+                        }
+
+                        string a = "";
+
+                        foreach (string word in album.Split(' '))
+                        {
+                            string trimmedWord = word.Trim(CLEAN_UP_TRIM);
+
+                            if (trimmedWord.Equals("OST", StringComparison.InvariantCultureIgnoreCase) ||
+                                trimmedWord.Equals("Soundtrack", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                break;
+                            }
+
+                            a += word + " ";
+                        }
+
+                        tagFile.Tag.Album = a + "Soundtrack";
 
                         i++;
 
