@@ -4,7 +4,7 @@ namespace YTAutoMusic
 {
     internal class ConversionHandeler
     {
-        private const int MAX_PROCESS_COUNT = 3;
+        private readonly int MAX_PROCESS_COUNT;
 
         private readonly List<MusicBundle> bundles;
         private readonly Queue<string> argumentQueue;
@@ -15,10 +15,13 @@ namespace YTAutoMusic
         {
             this.ffmpegPath = ffmpegPath;
 
+            MAX_PROCESS_COUNT = Math.Max(Environment.ProcessorCount / 2, 1);
+
+            Console.WriteLine("\nStarting Conversion.");
+            Console.WriteLine($"Allowing {MAX_PROCESS_COUNT} processes\n");
+
             bundles = new(toConvert.Count());
             argumentQueue = new(toConvert.Count());
-
-            Console.WriteLine("\n");
 
             foreach (var sound in toConvert)
             {
@@ -26,7 +29,7 @@ namespace YTAutoMusic
                 string rawName = PlaylistDownloader.GetNameWithoutURLTag(sound.Name);
                 string newName = finalDirectory + @$"\{rawName}.mp3";
 
-                Console.WriteLine($"Queuing conversion: '{originalName}'");
+                Console.WriteLine($"Queuing conversion: '{originalName}'\n");
 
                 FileInfo newFile = new(newName);
                 var bundle = new MusicBundle(newFile, PlaylistDownloader.GetURLTag(sound.Name), rawName);
