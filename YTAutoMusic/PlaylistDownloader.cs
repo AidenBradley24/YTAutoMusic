@@ -236,6 +236,7 @@ namespace YTAutoMusic
                 var duration = tagFile.Properties.Duration;
                 totalDuration += duration;
 
+                dataLength += bundle.File.Length;
                 trackCount++;
 
                 tagFile.Tag.Length = duration.ToString(@"hh\:mm\:ss");
@@ -245,10 +246,7 @@ namespace YTAutoMusic
             }
 
             ConversionHandeler conversion = new(tempFiles.AudioFiles, finalDirectory.FullName, ffmpegPath);
-
-            Task conversionTask = conversion.Convert();
-            conversionTask.Wait();
-
+            conversion.Convert();
             var bundles = conversion.GetMusicBundles();
 
             foreach (var bundle in bundles)

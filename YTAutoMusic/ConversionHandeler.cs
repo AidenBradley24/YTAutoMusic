@@ -4,7 +4,7 @@ namespace YTAutoMusic
 {
     internal class ConversionHandeler
     {
-        private const int MAX_PROCESS_COUNT = 4;
+        private readonly int MAX_PROCESS_COUNT;
 
         private readonly List<MusicBundle> bundles;
         private readonly Queue<string> argumentQueue;
@@ -16,6 +16,8 @@ namespace YTAutoMusic
             this.ffmpegPath = ffmpegPath;
 
             Console.WriteLine("\nStarting Conversion.");
+
+            MAX_PROCESS_COUNT = Math.Max(1, Environment.ProcessorCount / 2);
             Console.WriteLine($"Allowing {MAX_PROCESS_COUNT} processes\n");
 
             bundles = new(toConvert.Count());
@@ -39,7 +41,7 @@ namespace YTAutoMusic
             Console.WriteLine("\n");
         }
 
-        public async Task Convert()
+        public void Convert()
         {
             List<Task> tasks = new(MAX_PROCESS_COUNT);
 
@@ -50,32 +52,31 @@ namespace YTAutoMusic
                 if (tasks.Count < MAX_PROCESS_COUNT && argumentQueue.Any())
                 {
                     Task task = ConvertIndividual(argumentQueue.Dequeue());
+                    task.ConfigureAwait(false);
                     tasks.Add(task); 
                 }
 
-                await Task.Delay(100);
+                Task.Delay(100);
             }
         }
 
         private async Task ConvertIndividual(string args)
         {
             Console.WriteLine($"\nConversion start: '{args}'\n");
-
+            
             var ffmpeg = new Process()
             {
                 StartInfo = new ProcessStartInfo()
                 {
                     FileName = ffmpegPath,
                     Arguments = args,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    RedirectStandardInput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 }
             };
 
             ffmpeg.Start();
+
             await ffmpeg.WaitForExitAsync();
 
             Console.WriteLine($"\nConversion complete: '{args}'\n");

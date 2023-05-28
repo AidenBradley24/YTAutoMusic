@@ -249,6 +249,11 @@ namespace YTAutoMusic
                     t = t.Trim(CLEAN_UP_TRIM);
                     a = a.Trim(CLEAN_UP_TRIM);
 
+                    if (!title.Contains(t))
+                    {
+                        throw new FormatException("Not real 'music description'");
+                    }
+
                     if (string.IsNullOrWhiteSpace(a))
                     {
                         tagFile.Tag.Title = t;
