@@ -4,7 +4,7 @@ namespace YTAutoMusic
 {
     internal class ConversionHandeler
     {
-        private readonly int MAX_PROCESS_COUNT;
+        private const int MAX_PROCESS_COUNT = 4;
 
         private readonly List<MusicBundle> bundles;
         private readonly Queue<string> argumentQueue;
@@ -14,8 +14,6 @@ namespace YTAutoMusic
         public ConversionHandeler(IEnumerable<FileInfo> toConvert, string finalDirectory, string ffmpegPath)
         {
             this.ffmpegPath = ffmpegPath;
-
-            MAX_PROCESS_COUNT = Math.Max(Environment.ProcessorCount / 2, 1);
 
             Console.WriteLine("\nStarting Conversion.");
             Console.WriteLine($"Allowing {MAX_PROCESS_COUNT} processes\n");
