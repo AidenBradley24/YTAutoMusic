@@ -61,15 +61,16 @@ namespace YTAutoMusic {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ---------------------
-        ///YTMusicDownloader:
-        ///---------------------
+        ///   Looks up a localized string similar to 
         ///&apos;n&apos; - new playlist
         ///Create new playlist from a YouTube playlist. Place files in a new folder.
-        ///---------------------
+        ///
         ///&apos;a&apos; - append playlist
-        ///Update a playlist to include new music from YouTube playlist. Requires an existing playlist folder with a &apos;tracks&apos; folder inside
-        ///---------------------.
+        ///Update a playlist to include new music from YouTube playlist. Requires an existing playlist folder.
+        ///
+        ///&apos;c&apos; - copy playlist
+        ///Copy an existing playlist to a new location while preserving the XSPF playlist file
+        ///.
         /// </summary>
         internal static string helpText {
             get {
@@ -78,12 +79,24 @@ namespace YTAutoMusic {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to  __     _________            _        _____                      _                 _           
-        /// \ \   / /__   __|/\        | |      |  __ \                    | |               | |          
-        ///  \ \_/ /   | |  /  \  _   _| |_ ___ | |  | | _____      ___ __ | | ___   __ _  __| | ___ _ __ 
-        ///   \   /    | | / /\ \| | | | __/ _ \| |  | |/ _ \ \ /\ / / &apos;_ \| |/ _ \ / _` |/ _` |/ _ \ &apos;__|
-        ///    | |     | |/ ____ \ |_| | || (_) | |__| | (_) \ V  V /| | | | | (_) | (_| | (_| |  __/ |   
-        ///    |_|     |_/_/    \_\__, [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to What do you want to do?
+        ///&apos;n&apos; - new playlist | &apos;a&apos; - append playlist | &apos;q&apos; - quit | &apos;c&apos; copy | &apos;h&apos; - help.
+        /// </summary>
+        internal static string responses {
+            get {
+                return ResourceManager.GetString("responses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  __     _________            _        __  __           _      
+        /// \ \   / /__   __|/\        | |      |  \/  |         (_)     
+        ///  \ \_/ /   | |  /  \  _   _| |_ ___ | \  / |_   _ ___ _  ___ 
+        ///   \   /    | | / /\ \| | | | __/ _ \| |\/| | | | / __| |/ __|
+        ///    | |     | |/ ____ \ |_| | || (_) | |  | | |_| \__ \ | (__ 
+        ///    |_|     |_/_/    \_\__,_|\__\___/|_|  |_|\__,_|___/_|\___|
+        ///                                                              
+        ///-- .- -.. . -... -.-- .- .. -.. . -. -... .-. .- -.. .-.. . -.--.
         /// </summary>
         internal static string splash {
             get {

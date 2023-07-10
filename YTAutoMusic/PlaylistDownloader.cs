@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using TagLib.Id3v2;
 
@@ -17,7 +16,7 @@ namespace YTAutoMusic
 
             while (true)
             {
-                Console.WriteLine("Provide root path. Insert nothing to put in music directory.");
+                Console.WriteLine("Provide root directory.\nInsert nothing to put in music directory.");
                 folder = Console.ReadLine();
 
                 if (string.IsNullOrWhiteSpace(folder))
@@ -38,7 +37,7 @@ namespace YTAutoMusic
 
                 baseDirectory = Directory.CreateDirectory(folder);
 
-                if (Directory.CreateDirectory(Directory.GetCurrentDirectory()) == baseDirectory)
+                if (IsInsideProject(baseDirectory))
                 {
                     Console.WriteLine("Cannot open here.");
                     continue;
@@ -90,7 +89,7 @@ namespace YTAutoMusic
             PlaylistBundle playlistBundle = GetPlaylistInfo(url, tempFiles);
 
             Console.WriteLine($"Creating Playlist \"{playlistBundle.Name}\"");
-            var finalDirectory = Directory.CreateDirectory(baseDirectory + @$"\{playlistBundle.Name}\tracks");      
+            var finalDirectory = Directory.CreateDirectory(Path.Combine(baseDirectory.FullName, playlistBundle.Name, "tracks"));      
 
             FormatAndPlaceAudio(playlistBundle, tempFiles, finalDirectory, ffmpegPath);
             tempFiles.Dispose();
@@ -107,7 +106,7 @@ namespace YTAutoMusic
 
             while (true)
             {
-                Console.WriteLine("Provide playlist folder. (should have xspf file and a 'tracks' folder inside)");
+                Console.WriteLine("Provide existing playlist directory.\nIt should have xspf file and a 'tracks' folder inside.");
                 folder = Console.ReadLine();
 
                 if (string.IsNullOrWhiteSpace(folder))
@@ -125,15 +124,15 @@ namespace YTAutoMusic
                     continue;
                 }
 
-                if (!Directory.Exists(folder + @"\tracks"))
+                if (!Directory.Exists(Path.Combine(folder, "tracks")))
                 {
-                    Console.WriteLine("Playlist folder does not have a 'tracks' folder inside.");
+                    Console.WriteLine("Playlist directory does not have a 'tracks' directory inside.");
                     continue;
                 }
 
                 playlistDirectory = Directory.CreateDirectory(folder);
 
-                if (Directory.CreateDirectory(Directory.GetCurrentDirectory()) == playlistDirectory)
+                if (IsInsideProject(playlistDirectory))
                 {
                     Console.WriteLine("Cannot open here.");
                     continue;
@@ -154,7 +153,7 @@ namespace YTAutoMusic
                 }
             }
 
-            var trackDirectory = Directory.CreateDirectory(playlistDirectory.FullName + @"\tracks");
+            var trackDirectory = Directory.CreateDirectory(Path.Combine(playlistDirectory.FullName, "tracks"));
 
             var tracks = trackDirectory.EnumerateFiles();
 
@@ -205,6 +204,8 @@ namespace YTAutoMusic
             long dataLength = 0L;
             TimeSpan totalDuration = TimeSpan.Zero;
 
+            MetadataFiller metadataFiller = new MetadataFiller();
+
             foreach (var file in finalDirectory.EnumerateFiles())
             {
                 var tagFile = TagLib.File.Create(file.FullName);
@@ -227,11 +228,11 @@ namespace YTAutoMusic
                     id = "";   
                 }
 
-                var bundle = new MusicBundle(file, id, file.Name[..^".mp3".Length]);
                 string description = tagFile.Tag.Description;
                 string originalDescription = description[(description.IndexOf(ORIGINAL_DESCRIPTION_TAG) + ORIGINAL_DESCRIPTION_TAG.Length)..];
 
-                bundle.Auto(tagFile, originalDescription, playlist);
+                var bundle = new MusicBundle(file, id, file.Name[..^".mp3".Length], originalDescription);
+                metadataFiller.Fill(bundle, tagFile);
 
                 var duration = tagFile.Properties.Duration;
                 totalDuration += duration;
@@ -258,8 +259,8 @@ namespace YTAutoMusic
 
                 dataLength += bundle.File.Length;
 
-                var file = TagLib.File.Create(bundle.File.FullName, TagLib.ReadStyle.Average);
-                file.Tag.DateTagged = DateTime.Now;
+                var tagFile = TagLib.File.Create(bundle.File.FullName, TagLib.ReadStyle.Average);
+                tagFile.Tag.DateTagged = DateTime.Now;
 
                 // youtube description
 
@@ -285,37 +286,39 @@ namespace YTAutoMusic
                     }
                 }
 
-                bundle.Auto(file, originalDescription, playlist);
-                file.Tag.Description = description;
+                bundle.Description = originalDescription;
 
-                var duration = file.Properties.Duration;
+                metadataFiller.Fill(bundle, tagFile);
+                tagFile.Tag.Description = description;
+
+                var duration = tagFile.Properties.Duration;
                 totalDuration += duration;
 
-                file.Tag.Length = duration.ToString(@"hh\:mm\:ss");
+                tagFile.Tag.Length = duration.ToString(@"hh\:mm\:ss");
 
                 trackCount++;
 
-                Tag idTag = (Tag)file.GetTag(TagLib.TagTypes.Id3v2); // for saving the youtube id
+                Tag idTag = (Tag)tagFile.GetTag(TagLib.TagTypes.Id3v2); // for saving the youtube id
                 PrivateFrame p = PrivateFrame.Get(idTag, "yt-id", true);
                 p.PrivateData = Encoding.Unicode.GetBytes(bundle.ID);
 
-                file.Save();
-                file.Dispose();
+                tagFile.Save();
+                tagFile.Dispose();
             }
 
-            using (StreamWriter writer = new(finalDirectory.Parent.FullName + @"\description.txt"))
-            {
-                writer.WriteLine(playlist.Name);
-                writer.WriteLine("\n------------------\n");
-                writer.WriteLine($"Playlist sourced from https://www.youtube.com/playlist?list={playlist.ID}");
-                writer.WriteLine("\n------------------\n");
-                writer.WriteLine(playlist.Description);
-                writer.WriteLine("\n------------------\n");
-                writer.WriteLine("Stats:");
-                writer.WriteLine($"Track count: {trackCount}");
-                writer.WriteLine($"File size: {dataLength / 1000} KB");
-                writer.WriteLine($"Playlist duration: {totalDuration:hh\\:mm\\:ss}");
-            }
+            using StreamWriter writer = new(Path.Combine(finalDirectory.Parent.FullName, "description.txt"));
+
+            writer.WriteLine(playlist.Name);
+            writer.WriteLine(playlist.Description);
+            writer.WriteLine(playlist.ID);
+            writer.WriteLine("\n");
+            writer.WriteLine($"Playlist sourced from https://www.youtube.com/playlist?list={playlist.ID}");
+            writer.WriteLine("DO NOT MODIFY THIS FILE");
+            writer.WriteLine("\n");
+            writer.WriteLine("Stats:");
+            writer.WriteLine($"Track count: {trackCount}");
+            writer.WriteLine($"File size: {dataLength / 1000} KB");
+            writer.WriteLine($"Playlist duration: {totalDuration:hh\\:mm\\:ss}");
         }
 
         public static string GetNameWithoutURLTag(string name)
@@ -375,6 +378,28 @@ namespace YTAutoMusic
             };
 
             gen.Build(trackDirectory.Parent.FullName);
+        }
+
+        public static bool IsInsideProject(DirectoryInfo targetDirectory)
+        {
+            var project = Directory.CreateDirectory(Directory.GetCurrentDirectory());
+            return IsInsideProject(targetDirectory, project);
+        }
+
+        private static bool IsInsideProject(DirectoryInfo targetDirectory, DirectoryInfo project)
+        {
+            if (targetDirectory.FullName == project.FullName)
+            {
+                return true;
+            }
+
+            var parent = targetDirectory.Parent;
+            if (parent == null)
+            {
+                return false;
+            }
+
+            return IsInsideProject(parent, project);
         }
 
         private class TempFileBundle

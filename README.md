@@ -1,17 +1,16 @@
 # YTAutoMusic
 
-Automatically download and format a YouTube playlist as mp3 files and create a VLC playlist.
+A Windows command line YT to mp3 solution that is designed to fill mp3 metadata based on YT descriptions.
 
 ### Features (Given a YT playlist URL automatically...)
-- Download YouTube playlists of audio to mp3 files
+- Download YouTube playlists to mp3 files
 - Place these files in a given folder
 - Create a VLC playlist with the audio files
-- Append existing playlists (you don't need to redownload the entire playlist)
+- Append existing playlists without needing to redownload the entire playlist
 - Fill metadata of files based on YouTube titles and descriptions
 
-### Required programs to run application:
+### These two programs are used to run application:
 - yt-dlp https://github.com/yt-dlp/yt-dlp
 - ffmpeg https://ffmpeg.org/
 
-Each must be located inside of program files.
-"%PROGRAMFILES%\ffmpeg\ffmpeg.exe"
+They are integrated into the build files

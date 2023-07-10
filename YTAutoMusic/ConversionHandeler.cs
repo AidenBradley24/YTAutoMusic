@@ -32,7 +32,7 @@ namespace YTAutoMusic
                 Console.WriteLine($"Queuing conversion: '{originalName}'\n");
 
                 FileInfo newFile = new(newName);
-                var bundle = new MusicBundle(newFile, PlaylistDownloader.GetURLTag(sound.Name), rawName);
+                var bundle = new MusicBundle(newFile, PlaylistDownloader.GetURLTag(sound.Name), rawName, "");
                 bundles.Add(bundle);
 
                 argumentQueue.Enqueue($"-i \"{originalName}\" \"{newName}\"");
@@ -78,6 +78,11 @@ namespace YTAutoMusic
             ffmpeg.Start();
 
             await ffmpeg.WaitForExitAsync();
+
+            if(ffmpeg.ExitCode != 0)
+            {
+                Console.WriteLine($"\nAN ERROR HAS OCCURRED DURING CONVERSION! \n\"\n{ffmpeg.StandardOutput.ReadToEnd()}\n\"\n");
+            }
 
             Console.WriteLine($"\nConversion complete: '{args}'\n");
         }

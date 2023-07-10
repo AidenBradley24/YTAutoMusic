@@ -53,7 +53,7 @@ namespace YTAutoMusic
 
             foreach (FileInfo file in TrackDirectory.EnumerateFiles())
             {
-                string location = "file:///tracks/" + url.Encode($"{file.Name}");
+                string location = "file:///" + url.Encode($"{file.FullName}");
 
                 XElement extension = new(ns + "extension");
 
@@ -93,7 +93,7 @@ namespace YTAutoMusic
                 counter++;
             }
 
-            using FileStream stream = new(path + @"\playlist.xspf", FileMode.Create);
+            using FileStream stream = new(Path.Combine(path, "playlist.xspf"), FileMode.Create);
             doc.Save(stream);
         }
     }

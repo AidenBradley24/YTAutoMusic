@@ -10,19 +10,22 @@
 
             (string dlpPath, string ffmpegPath) = FindDependencies();
 
-            if (args.Length == 0 )
+            if (args.Length != 0)
             {
-                NoArgument(dlpPath, ffmpegPath);
+                TextReader reader = new StreamReader(string.Join("\n", args));
+                Console.SetIn(reader);
             }
+
+            ReadArguments(dlpPath, ffmpegPath);
         }
 
-        static void NoArgument(string dlpPath, string ffmpegPath)
+        static void ReadArguments(string dlpPath, string ffmpegPath)
         {
             string response;
 
             do
             {
-                Console.WriteLine("What do you want to do?\n'n' - new playlist | 'a' - append playlist | 'q' - quit | 'h' - help");
+                Console.WriteLine(Resources.responses);
                 response = Console.ReadLine();
 
                 switch (response)
@@ -35,6 +38,9 @@
                         break;
                     case "a":
                         PlaylistDownloader.Append(dlpPath, ffmpegPath);
+                        break;
+                    case "c":
+                        PlaylistCopier.Copy();
                         break;
                     case "h":
                         Console.WriteLine(Resources.helpText);
@@ -49,22 +55,25 @@
 
         private static (string, string) FindDependencies()
         {
-            string dlpPath = Environment.ExpandEnvironmentVariables(@"%PROGRAMFILES%\yt-dlp\yt-dlp.exe");
+            FileInfo processPath = new(Environment.ProcessPath);
+            DirectoryInfo directory = processPath.Directory;
+
+            string dlpPath = Path.Combine(directory.FullName, "Dependencies", "yt-dlp.exe");
 
             if (!File.Exists(dlpPath))
             {
                 Console.WriteLine("Unable to find yt-dlp.exe.");
                 Console.WriteLine($"File should be located in \"{dlpPath}\"");
-                Environment.Exit(404);
+                Environment.Exit(1);
             }
 
-            string ffmpegPath = Environment.ExpandEnvironmentVariables(@"%PROGRAMFILES%\ffmpeg\ffmpeg.exe");
+            string ffmpegPath = Path.Combine(directory.FullName, "Dependencies", "ffmpeg.exe");
 
             if (!File.Exists(ffmpegPath))
             {
                 Console.WriteLine("Unable to find ffmpeg.exe.");
                 Console.WriteLine($"File should be located in \"{ffmpegPath}\"");
-                Environment.Exit(404);
+                Environment.Exit(1);
             }
 
             return (dlpPath, ffmpegPath);
