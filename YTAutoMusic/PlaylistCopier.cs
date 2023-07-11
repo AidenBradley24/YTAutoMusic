@@ -98,14 +98,9 @@
             }
 
             (string title, string description, string id) = GetInfoFromDescription(descriptionFile);
+            PlaylistBundle playlist = new(title, description, id);
 
-            XspfBuilder builder = new()
-            {
-                TrackDirectory = tracksDirectory,
-                PlaylistBundle = new PlaylistBundle(title, description, id)
-            };
-
-            builder.Build(targetDirectory.FullName);
+            PlaylistDownloader.CreatePlaylistFiles(playlist, tracksDirectory);
 
             Console.WriteLine("Copying complete");
         }

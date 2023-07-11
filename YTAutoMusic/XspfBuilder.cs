@@ -53,7 +53,7 @@ namespace YTAutoMusic
 
             foreach (FileInfo file in TrackDirectory.EnumerateFiles())
             {
-                string location = "file:///" + url.Encode($"{file.FullName}");
+                string location = "file:///tracks/" + url.Encode($"{file.Name}");
 
                 XElement extension = new(ns + "extension");
 

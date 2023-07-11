@@ -79,6 +79,21 @@ namespace YTAutoMusic {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to How to use a YTAutoMusic playlist:
+        ///
+        ///1) To play the music in the playlist. Open the XSPF file on your media player of choice. I recommend VLC.
+        ///
+        ///2) If you update the playlist on YouTube, you can open the batch file &apos;Append Playlist.bat&apos; to automaticly update the local playlist.
+        ///
+        ///3) Moving the playlist to a different location break functionality. The XSPF file and the mp3 files inside the tracks folder should still work, but the batch file won&apos;t work anymore. To fix this use the copy command in YTAutoMus [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string readmeText {
+            get {
+                return ResourceManager.GetString("readmeText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to What do you want to do?
         ///&apos;n&apos; - new playlist | &apos;a&apos; - append playlist | &apos;q&apos; - quit | &apos;c&apos; copy | &apos;h&apos; - help.
         /// </summary>

@@ -94,7 +94,7 @@ namespace YTAutoMusic
             FormatAndPlaceAudio(playlistBundle, tempFiles, finalDirectory, ffmpegPath);
             tempFiles.Dispose();
 
-            CreatePlaylistFile(playlistBundle, finalDirectory);
+            CreatePlaylistFiles(playlistBundle, finalDirectory);
 
             Console.WriteLine("\n\nPlaylist creation complete.\n\n");
         }
@@ -108,6 +108,8 @@ namespace YTAutoMusic
             {
                 Console.WriteLine("Provide existing playlist directory.\nIt should have xspf file and a 'tracks' folder inside.");
                 folder = Console.ReadLine();
+
+                Console.WriteLine(folder);
 
                 if (string.IsNullOrWhiteSpace(folder))
                 {
@@ -191,7 +193,7 @@ namespace YTAutoMusic
             FormatAndPlaceAudio(playlistBundle, tempFiles, trackDirectory, ffmpegPath);
             tempFiles.Dispose();
 
-            CreatePlaylistFile(playlistBundle, trackDirectory);
+            CreatePlaylistFiles(playlistBundle, trackDirectory);
 
             Console.WriteLine("\n\nAppend Playlist Complete\n\n");
         }
@@ -369,7 +371,7 @@ namespace YTAutoMusic
             return new PlaylistBundle(playlistName, playlistDescription, playlistID);
         }
 
-        private static void CreatePlaylistFile(PlaylistBundle playlistBundle, DirectoryInfo trackDirectory)
+        public static void CreatePlaylistFiles(PlaylistBundle playlistBundle, DirectoryInfo trackDirectory)
         {
             XspfBuilder gen = new()
             {
@@ -378,11 +380,18 @@ namespace YTAutoMusic
             };
 
             gen.Build(trackDirectory.Parent.FullName);
+
+            string url = $"https://www.youtube.com/playlist?list={playlistBundle.ID}";
+            Console.WriteLine(url);
+            BatchAppendMaker.Create(trackDirectory.Parent, url);
+
+            using StreamWriter writer = new(Path.Combine(trackDirectory.Parent.FullName, "README.txt"));
+            writer.Write(Resources.readmeText);
         }
 
         public static bool IsInsideProject(DirectoryInfo targetDirectory)
         {
-            var project = Directory.CreateDirectory(Directory.GetCurrentDirectory());
+            var project = new FileInfo(Environment.ProcessPath).Directory;
             return IsInsideProject(targetDirectory, project);
         }
 

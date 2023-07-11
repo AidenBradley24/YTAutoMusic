@@ -1,7 +1,11 @@
-﻿namespace YTAutoMusic
+﻿using System.Text;
+
+namespace YTAutoMusic
 {
-    internal class Program
+    internal static class Program
     {
+        private static bool argsEnabled = false;
+
         static void Main(string[] args)
         {
             Console.WriteLine();
@@ -12,8 +16,11 @@
 
             if (args.Length != 0)
             {
-                TextReader reader = new StreamReader(string.Join("\n", args));
+                var newArgs = args.Select(s => s.Trim('"'));
+                MemoryStream memory = new(Encoding.UTF8.GetBytes(string.Join("\n", newArgs)));
+                TextReader reader = new StreamReader(memory);
                 Console.SetIn(reader);
+                argsEnabled = true;
             }
 
             ReadArguments(dlpPath, ffmpegPath);
@@ -48,6 +55,11 @@
                     default:
                         Console.WriteLine("Invalid Response.\n");
                         break;
+                }
+
+                if (argsEnabled)
+                {
+                    break;
                 }
 
             } while (true);
