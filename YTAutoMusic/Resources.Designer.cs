@@ -8,10 +8,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace YTAutoMusic {
+namespace YTAutoMusic
+{
     using System;
-    
-    
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -22,44 +23,52 @@ namespace YTAutoMusic {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
-        
+    internal class Resources
+    {
+
         private static global::System.Resources.ResourceManager resourceMan;
-        
+
         private static global::System.Globalization.CultureInfo resourceCulture;
-        
+
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Resources() {
+        internal Resources()
+        {
         }
-        
+
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
-            get {
-                if (object.ReferenceEquals(resourceMan, null)) {
+        internal static global::System.Resources.ResourceManager ResourceManager
+        {
+            get
+            {
+                if (object.ReferenceEquals(resourceMan, null))
+                {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("YTAutoMusic.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
             }
         }
-        
+
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
-            get {
+        internal static global::System.Globalization.CultureInfo Culture
+        {
+            get
+            {
                 return resourceCulture;
             }
-            set {
+            set
+            {
                 resourceCulture = value;
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to 
         ///&apos;n&apos; - new playlist
@@ -72,12 +81,14 @@ namespace YTAutoMusic {
         ///Copy an existing playlist to a new location while preserving the XSPF playlist file
         ///.
         /// </summary>
-        internal static string helpText {
-            get {
+        internal static string helpText
+        {
+            get
+            {
                 return ResourceManager.GetString("helpText", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to How to use a YTAutoMusic playlist:
         ///
@@ -87,22 +98,26 @@ namespace YTAutoMusic {
         ///
         ///3) Moving the playlist to a different location break functionality. The XSPF file and the mp3 files inside the tracks folder should still work, but the batch file won&apos;t work anymore. To fix this use the copy command in YTAutoMus [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string readmeText {
-            get {
+        internal static string readmeText
+        {
+            get
+            {
                 return ResourceManager.GetString("readmeText", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to What do you want to do?
         ///&apos;n&apos; - new playlist | &apos;a&apos; - append playlist | &apos;q&apos; - quit | &apos;c&apos; copy | &apos;h&apos; - help.
         /// </summary>
-        internal static string responses {
-            get {
+        internal static string responses
+        {
+            get
+            {
                 return ResourceManager.GetString("responses", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to  __     _________            _        __  __           _      
         /// \ \   / /__   __|/\        | |      |  \/  |         (_)     
@@ -113,8 +128,10 @@ namespace YTAutoMusic {
         ///                                                              
         ///-- .- -.. . -... -.-- .- .. -.. . -. -... .-. .- -.. .-.. . -.--.
         /// </summary>
-        internal static string splash {
-            get {
+        internal static string splash
+        {
+            get
+            {
                 return ResourceManager.GetString("splash", resourceCulture);
             }
         }
