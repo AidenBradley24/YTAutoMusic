@@ -373,13 +373,13 @@ namespace YTAutoMusic
 
         public static void CreatePlaylistFiles(PlaylistBundle playlistBundle, DirectoryInfo trackDirectory)
         {
-            XspfBuilder gen = new()
+            PlaylistFileBuilder gen = new()
             {
                 PlaylistBundle = playlistBundle,
                 TrackDirectory = trackDirectory,
             };
 
-            gen.Build(trackDirectory.Parent.FullName);
+            gen.Build(trackDirectory.Parent);
 
             string url = $"https://www.youtube.com/playlist?list={playlistBundle.ID}";
             Console.WriteLine(url);
