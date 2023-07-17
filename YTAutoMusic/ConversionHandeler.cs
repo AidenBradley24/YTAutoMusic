@@ -4,7 +4,7 @@ namespace YTAutoMusic
 {
     internal class ConversionHandeler
     {
-        private const int MAX_PROCESS_COUNT = 3;
+        private readonly int MAX_PROCESS_COUNT;
 
         private readonly List<MusicBundle> bundles;
         private readonly Queue<string> argumentQueue;
@@ -15,10 +15,13 @@ namespace YTAutoMusic
         {
             this.ffmpegPath = ffmpegPath;
 
+            Console.WriteLine("\nStarting Conversion.");
+
+            MAX_PROCESS_COUNT = Math.Max(1, Environment.ProcessorCount / 2);
+            Console.WriteLine($"Allowing {MAX_PROCESS_COUNT} processes\n");
+
             bundles = new(toConvert.Count());
             argumentQueue = new(toConvert.Count());
-
-            Console.WriteLine("\n");
 
             foreach (var sound in toConvert)
             {
@@ -26,10 +29,10 @@ namespace YTAutoMusic
                 string rawName = PlaylistDownloader.GetNameWithoutURLTag(sound.Name);
                 string newName = finalDirectory + @$"\{rawName}.mp3";
 
-                Console.WriteLine($"Queuing conversion: '{originalName}'");
+                Console.WriteLine($"Queuing conversion: '{originalName}'\n");
 
                 FileInfo newFile = new(newName);
-                var bundle = new MusicBundle(newFile, PlaylistDownloader.GetURLTag(sound.Name), rawName);
+                var bundle = new MusicBundle(newFile, PlaylistDownloader.GetURLTag(sound.Name), rawName, "");
                 bundles.Add(bundle);
 
                 argumentQueue.Enqueue($"-i \"{originalName}\" \"{newName}\"");
@@ -38,7 +41,7 @@ namespace YTAutoMusic
             Console.WriteLine("\n");
         }
 
-        public async Task Convert()
+        public void Convert()
         {
             List<Task> tasks = new(MAX_PROCESS_COUNT);
 
@@ -49,33 +52,37 @@ namespace YTAutoMusic
                 if (tasks.Count < MAX_PROCESS_COUNT && argumentQueue.Any())
                 {
                     Task task = ConvertIndividual(argumentQueue.Dequeue());
+                    task.ConfigureAwait(false);
                     tasks.Add(task); 
                 }
 
-                await Task.Delay(100);
+                Task.Delay(100);
             }
         }
 
         private async Task ConvertIndividual(string args)
         {
             Console.WriteLine($"\nConversion start: '{args}'\n");
-
+            
             var ffmpeg = new Process()
             {
                 StartInfo = new ProcessStartInfo()
                 {
                     FileName = ffmpegPath,
                     Arguments = args,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    RedirectStandardInput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 }
             };
 
             ffmpeg.Start();
+
             await ffmpeg.WaitForExitAsync();
+
+            if(ffmpeg.ExitCode != 0)
+            {
+                Console.WriteLine($"\nAN ERROR HAS OCCURRED DURING CONVERSION! \n\"\n{ffmpeg.StandardOutput.ReadToEnd()}\n\"\n");
+            }
 
             Console.WriteLine($"\nConversion complete: '{args}'\n");
         }

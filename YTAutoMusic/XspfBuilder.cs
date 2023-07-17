@@ -22,22 +22,28 @@ namespace YTAutoMusic
                 throw new InvalidOperationException("XSPF builder missing information");
             }
 
+            BuildVLC(path);
+            BuildAIMP(path);
+        }
+
+        private void BuildVLC(string path)
+        {
             string header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
                "<playlist xmlns=\"http://xspf.org/ns/0/\" xmlns:vlc=\"http://www.videolan.org/vlc/playlist/ns/0/\" version=\"1\">" +
                "</playlist>";
             XDocument doc = XDocument.Parse(header);
 
-            XElement? playlist = doc.FirstNode as XElement;
+            XElement playlist = doc.FirstNode as XElement;
 
             XNamespace ns = playlist.GetDefaultNamespace();
             XNamespace vlcNS = playlist.GetNamespaceOfPrefix("vlc");
 
             XElement tracklist = new(ns + "trackList");
 
-            playlist.Add(new object[] 
+            playlist.Add(new object[]
             {
                 new XElement(ns + "title", PlaylistBundle.Name),
-                new XElement(ns + "extension", new object[] 
+                new XElement(ns + "extension", new object[]
                 {
                     new XAttribute("application", "http://www.videolan.org/vlc/playlist/0"),
                     new XElement(vlcNS + "item",
@@ -57,7 +63,7 @@ namespace YTAutoMusic
 
                 XElement extension = new(ns + "extension");
 
-                extension.Add(new object[] 
+                extension.Add(new object[]
                 {
                     new XAttribute("application", "http://www.videolan.org/vlc/playlist/0"),
                     new XElement(vlcNS + "id", counter),
@@ -69,7 +75,7 @@ namespace YTAutoMusic
                 PrivateFrame p = PrivateFrame.Get(idTag, "yt-id", false);
 
                 string info;
-                if(p != null)
+                if (p != null)
                 {
                     string id = Encoding.Unicode.GetString(p.PrivateData.Data);
                     info = $"https://www.youtube.com/watch?v={id}&list={PlaylistBundle.ID}";
@@ -79,9 +85,9 @@ namespace YTAutoMusic
                     info = $"Added to playlist without YouTube";
                 }
 
-                tracklist.Add(new object[] 
+                tracklist.Add(new object[]
                 {
-                   new XElement(ns + "track", new object[] 
+                   new XElement(ns + "track", new object[]
                    {
                        new XElement(ns + "location", location),
                        new XElement(ns + "title", tagFile.Tag.Title),
@@ -93,8 +99,85 @@ namespace YTAutoMusic
                 counter++;
             }
 
-            using FileStream stream = new(path + @"\playlist.xspf", FileMode.Create);
+            using FileStream stream = new(Path.Combine(path, "VLC playlist.xspf"), FileMode.Create);
+            doc.Save(stream);
+        }
+        private void BuildAIMP(string path)
+        {
+            string header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+               "<playlist xmlns=\"http://xspf.org/ns/0/\" xmlns:aimp=\"http://www.aimp.ru/playlist/ns/0/\" version=\"1\">" +
+               "</playlist>";
+            XDocument doc = XDocument.Parse(header);
+
+            XElement playlist = doc.FirstNode as XElement;
+
+            XNamespace ns = playlist.GetDefaultNamespace();
+            XNamespace aimpNS = playlist.GetNamespaceOfPrefix("aimp");
+
+            XElement tracklist = new(ns + "trackList");
+
+            playlist.Add(new object[]
+            {
+                new XElement(ns + "title", PlaylistBundle.Name),
+                new XElement(ns + "extension", new object[]
+                {
+                    new XAttribute("application", "http://www.aimp.ru/playlist/summary/0"),
+                    new XElement(aimpNS + "prop",
+                       new XAttribute("name", "Name"),
+                       PlaylistBundle.Name
+                    ),
+                }),
+                new XElement(ns + "info", $"https://www.youtube.com/playlist?list={PlaylistBundle.ID}"),
+                tracklist,
+            });
+
+            int counter = 0;
+
+            foreach (FileInfo file in TrackDirectory.EnumerateFiles())
+            {
+                string location = "file:///tracks/" + file.Name;
+
+                XElement extension = new(ns + "extension");
+
+                extension.Add(new object[]
+                {
+                    new XAttribute("application", "http://www.aimp.ru/playlist/track/0"),
+                    new XElement(aimpNS + "queueIndex", counter),
+                });
+
+                TagLib.File tagFile = TagLib.File.Create(file.FullName);
+
+                Tag idTag = (Tag)tagFile.GetTag(TagLib.TagTypes.Id3v2); // for reading the youtube id
+                PrivateFrame p = PrivateFrame.Get(idTag, "yt-id", false);
+
+                string info;
+                if (p != null)
+                {
+                    string id = Encoding.Unicode.GetString(p.PrivateData.Data);
+                    info = $"https://www.youtube.com/watch?v={id}&list={PlaylistBundle.ID}";
+                }
+                else
+                {
+                    info = $"Added to playlist without YouTube";
+                }
+
+                tracklist.Add(new object[]
+                {
+                   new XElement(ns + "track", new object[]
+                   {
+                       new XElement(ns + "location", location),
+                       new XElement(ns + "title", tagFile.Tag.Title),
+                       new XElement(ns + "info", info),
+                       extension
+                   })
+                });
+
+                counter++;
+            }
+
+            using FileStream stream = new(Path.Combine(path, "AIMP playlist.xspf"), FileMode.Create);
             doc.Save(stream);
         }
     }
 }
+
