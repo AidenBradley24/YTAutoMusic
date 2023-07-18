@@ -105,5 +105,13 @@
             hit = -1;
             return sentence;
         }
+
+        public static bool IsNumberBody(string section)
+        {
+            section = section.Trim('(', ')');
+            section = section.Trim(CLEAN_UP_TRIM);
+
+            return section.All(char.IsDigit);
+        }
     }
 }

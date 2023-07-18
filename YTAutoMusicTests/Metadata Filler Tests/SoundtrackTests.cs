@@ -112,6 +112,20 @@ namespace YTAutoMusicTests.Metadata_Filler_Tests
             Assert.Equal("Random Soundtrack", tagFile.Tag.Album);
         }
 
+        [Fact] public void IndexRemoval_2()
+        {
+            var tagFile = TagFileCreater.CreateTemp();
+            var data = new SoundtrackMetadata();
+
+            string title = "Random Ost: 1 - Song Name";
+            string description = "nonsense";
+
+            Assert.True(data.Fill(tagFile, title, description));
+
+            Assert.Equal("Song Name", tagFile.Tag.Title);
+            Assert.Equal("Random Soundtrack", tagFile.Tag.Album);
+        }
+
         [Fact]
         public void CompleteMess_1()
         {
@@ -119,6 +133,21 @@ namespace YTAutoMusicTests.Metadata_Filler_Tests
             var data = new SoundtrackMetadata();
 
             string title = "\"Random O.S.T. \" ( 3278 ) \"Song Name \"";
+            string description = "nonsense";
+
+            Assert.True(data.Fill(tagFile, title, description));
+
+            Assert.Equal("Song Name", tagFile.Tag.Title);
+            Assert.Equal("Random Soundtrack", tagFile.Tag.Album);
+        }
+
+        [Fact]
+        public void ComplexIndex()
+        {
+            var tagFile = TagFileCreater.CreateTemp();
+            var data = new SoundtrackMetadata();
+
+            string title = "Random OST - Song Name (1-2)";
             string description = "nonsense";
 
             Assert.True(data.Fill(tagFile, title, description));
