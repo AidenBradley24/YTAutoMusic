@@ -109,8 +109,6 @@ namespace YTAutoMusic
                 Console.WriteLine("Provide existing playlist directory.\nIt should have xspf file and a 'tracks' folder inside.");
                 folder = Console.ReadLine();
 
-                Console.WriteLine(folder);
-
                 if (string.IsNullOrWhiteSpace(folder))
                 {
                     continue;

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Configuration;
 
 namespace YTAutoMusic
 {
@@ -23,11 +24,23 @@ namespace YTAutoMusic
             bundles = new(toConvert.Count());
             argumentQueue = new(toConvert.Count());
 
+            string fileExtension = ConfigurationManager.AppSettings.Get("Output file extension");
+            if(string.IsNullOrWhiteSpace(fileExtension))
+            {
+                throw new ConfigurationErrorsException("Invalid file extension");
+            }
+
+            string ffmpegAddition = ConfigurationManager.AppSettings.Get("Additional ffmpeg commands");
+            if (string.IsNullOrWhiteSpace(fileExtension))
+            {
+                ffmpegAddition = "";
+            }
+
             foreach (var sound in toConvert)
             {
                 string originalName = sound.FullName;
                 string rawName = PlaylistDownloader.GetNameWithoutURLTag(sound.Name);
-                string newName = finalDirectory + @$"\{rawName}.mp3";
+                string newName = Path.Combine(finalDirectory, $"{rawName}.mp3");
 
                 Console.WriteLine($"Queuing conversion: '{originalName}'\n");
 
@@ -35,7 +48,7 @@ namespace YTAutoMusic
                 var bundle = new MusicBundle(newFile, PlaylistDownloader.GetURLTag(sound.Name), rawName, "");
                 bundles.Add(bundle);
 
-                argumentQueue.Enqueue($"-i \"{originalName}\" \"{newName}\"");
+                argumentQueue.Enqueue($"-i \"{originalName}\" {ffmpegAddition} \"{newName}\"");
             }
 
             Console.WriteLine("\n");
