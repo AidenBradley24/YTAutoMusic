@@ -2,7 +2,7 @@
 
 namespace YTAutoMusic.Metadata_Fillers
 {
-    internal class SoundtrackParenthesisMetadata : MetadataBase
+    public class SoundtrackParenthesisMetadata : MetadataBase
     {
         public override int Priority => 2;
 

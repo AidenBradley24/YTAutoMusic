@@ -3,7 +3,7 @@
     /// <summary>
     /// A meta data filling scheme; Only one can be used per song.
     /// </summary>
-    internal abstract class MetadataBase : IComparable<MetadataBase>
+    public abstract class MetadataBase : IComparable<MetadataBase>
     {
         /// <summary>
         /// Fill tag file metadata based on an abstract scheme
