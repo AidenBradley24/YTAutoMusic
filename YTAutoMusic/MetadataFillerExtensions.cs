@@ -1,6 +1,6 @@
 ﻿namespace YTAutoMusic
 {
-    internal static class MetadataFillerExtensions
+    public static class MetadataFillerExtensions
     {
         public static readonly char[] SEPERATORS = { '-', '\u2012', '\u2013', '\u2014', '\u2015', '|', '·', '\uFF02', '\u0022', '\u201C', '\u201D', '\u201E', '\u201F' };
 
@@ -104,6 +104,14 @@
 
             hit = -1;
             return sentence;
+        }
+
+        public static bool IsNumberBody(string section)
+        {
+            section = section.Trim('(', ')');
+            section = section.Trim(CLEAN_UP_TRIM);
+
+            return section.All(char.IsDigit);
         }
     }
 }

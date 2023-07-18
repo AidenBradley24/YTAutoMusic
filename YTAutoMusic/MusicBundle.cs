@@ -1,6 +1,6 @@
 ﻿namespace YTAutoMusic
 {
-    internal class MusicBundle
+    public class MusicBundle
     {
         public string Title { get; set; }
         public string Description { get; set; }

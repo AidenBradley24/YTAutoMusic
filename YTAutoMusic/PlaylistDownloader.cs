@@ -89,7 +89,7 @@ namespace YTAutoMusic
             PlaylistBundle playlistBundle = GetPlaylistInfo(url, tempFiles);
 
             Console.WriteLine($"Creating Playlist \"{playlistBundle.Name}\"");
-            var finalDirectory = Directory.CreateDirectory(Path.Combine(baseDirectory.FullName, playlistBundle.Name, "tracks"));      
+            var finalDirectory = Directory.CreateDirectory(Path.Combine(baseDirectory.FullName, playlistBundle.Name, "tracks"));
 
             FormatAndPlaceAudio(playlistBundle, tempFiles, finalDirectory, ffmpegPath);
             tempFiles.Dispose();
@@ -108,8 +108,6 @@ namespace YTAutoMusic
             {
                 Console.WriteLine("Provide existing playlist directory.\nIt should have xspf file and a 'tracks' folder inside.");
                 folder = Console.ReadLine();
-
-                Console.WriteLine(folder);
 
                 if (string.IsNullOrWhiteSpace(folder))
                 {
@@ -206,7 +204,7 @@ namespace YTAutoMusic
             long dataLength = 0L;
             TimeSpan totalDuration = TimeSpan.Zero;
 
-            MetadataFiller metadataFiller = new MetadataFiller();
+            MetadataFiller metadataFiller = new();
 
             foreach (var file in finalDirectory.EnumerateFiles())
             {
@@ -227,7 +225,7 @@ namespace YTAutoMusic
                 }
                 else
                 {
-                    id = "";   
+                    id = "";
                 }
 
                 string description = tagFile.Tag.Description;
@@ -373,13 +371,13 @@ namespace YTAutoMusic
 
         public static void CreatePlaylistFiles(PlaylistBundle playlistBundle, DirectoryInfo trackDirectory)
         {
-            XspfBuilder gen = new()
+            PlaylistFileBuilder gen = new()
             {
                 PlaylistBundle = playlistBundle,
                 TrackDirectory = trackDirectory,
             };
 
-            gen.Build(trackDirectory.Parent.FullName);
+            gen.Build(trackDirectory.Parent);
 
             string url = $"https://www.youtube.com/playlist?list={playlistBundle.ID}";
             Console.WriteLine(url);
@@ -428,7 +426,7 @@ namespace YTAutoMusic
 
             public IEnumerable<FileInfo> AudioFiles
             {
-                get { if(dead) throw new ObjectDisposedException("tempfiles"); return audioFiles; }
+                get { if (dead) throw new ObjectDisposedException("tempfiles"); return audioFiles; }
             }
 
             public IEnumerable<FileInfo> AllFiles

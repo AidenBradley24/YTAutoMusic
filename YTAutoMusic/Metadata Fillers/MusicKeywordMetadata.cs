@@ -2,7 +2,7 @@
 
 namespace YTAutoMusic.Metadata_Fillers
 {
-    internal class MusicKeywordMetadata : MetadataBase
+    public class MusicKeywordMetadata : MetadataBase
     {
         public override int Priority => 4;
 

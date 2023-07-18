@@ -2,7 +2,7 @@
 
 namespace YTAutoMusic.Metadata_Fillers
 {
-    internal class SoundtrackMetadata : MetadataBase
+    public class SoundtrackMetadata : MetadataBase
     {
         public override int Priority => 3;
 
@@ -10,7 +10,7 @@ namespace YTAutoMusic.Metadata_Fillers
 
         public override bool Fill(TagLib.File tagFile, string title, string description)
         {
-            if ((IsStandaloneWord("OST", title, out string usedWord) || IsStandaloneWord("O.S.T.", title, out usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord)))
+            if (IsStandaloneWord("OST", title, out string usedWord) || IsStandaloneWord("O.S.T", title, out usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord))
             {
                 var bits = title.Split(SEPERATORS, StringSplitOptions.RemoveEmptyEntries);
 
@@ -47,14 +47,14 @@ namespace YTAutoMusic.Metadata_Fillers
                         }
                     }
 
-                    if (usedWord == "O.S.T.")
+                    if (usedWord.Equals("O.S.T", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        album = album.Replace("O.S.T.", "OST");
+                        album = album.Replace("O.S.T", "OST", StringComparison.InvariantCultureIgnoreCase);
                     }
 
                     string a = "";
 
-                    foreach (string word in album.Split(' '))
+                    foreach (string word in album.Split(new char[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
                     {
                         string trimmedWord = word.Trim(CLEAN_UP_TRIM);
 
@@ -78,12 +78,16 @@ namespace YTAutoMusic.Metadata_Fillers
                         if (i == blacklist) continue;
 
                         string bit = bits[i].Trim(' ', '\n', '\t', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
-                        if (string.IsNullOrWhiteSpace(bit))
+                        bit = bit.TrimEnd('(');
+                        bit = bit.TrimStart(')');
+
+                        if (string.IsNullOrWhiteSpace(bit) || IsNumberBody(bit))
                         {
                             continue;
                         }
 
                         t = bit;
+                        break;
                     }
 
                     i = soundtrackIndex - 1;
@@ -95,12 +99,16 @@ namespace YTAutoMusic.Metadata_Fillers
                             if (i == blacklist) continue;
 
                             string bit = bits[i].Trim(' ', '\n', '\t', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
-                            if (string.IsNullOrWhiteSpace(bit))
+                            bit = bit.TrimEnd('(');
+                            bit = bit.TrimStart(')');
+
+                            if (string.IsNullOrWhiteSpace(bit) || IsNumberBody(bit))
                             {
                                 continue;
                             }
 
                             t = bit;
+                            break;
                         }
                     }
 

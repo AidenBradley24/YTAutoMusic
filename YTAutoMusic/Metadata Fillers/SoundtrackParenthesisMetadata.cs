@@ -2,7 +2,7 @@
 
 namespace YTAutoMusic.Metadata_Fillers
 {
-    internal class SoundtrackParenthesisMetadata : MetadataBase
+    public class SoundtrackParenthesisMetadata : MetadataBase
     {
         public override int Priority => 2;
 
@@ -10,7 +10,7 @@ namespace YTAutoMusic.Metadata_Fillers
 
         public override bool Fill(TagLib.File tagFile, string title, string description)
         {
-            if ((IsStandaloneWord("OST", title, out string usedWord) || IsStandaloneWord("O.S.T.", title, out usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord)))
+            if (IsStandaloneWord("OST", title, out string usedWord) || IsStandaloneWord("O.S.T.", title, out usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord))
             {
                 int index = title.IndexOf(usedWord, StringComparison.InvariantCultureIgnoreCase);
                 if (index < 0 || index + usedWord.Length >= title.Length || title[index + usedWord.Length] != ')')
