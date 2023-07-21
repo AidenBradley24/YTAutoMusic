@@ -308,9 +308,10 @@ namespace YTAutoMusic
 
             using StreamWriter writer = new(Path.Combine(finalDirectory.Parent.FullName, "description.txt"));
 
-            writer.WriteLine(playlist.Name);
+            writer.WriteLine($"Name: {playlist.Name}");
+            writer.WriteLine($"ID: {playlist.ID}");
+            writer.WriteLine("\nDescription:");
             writer.WriteLine(playlist.Description);
-            writer.WriteLine(playlist.ID);
             writer.WriteLine("\n");
             writer.WriteLine($"Playlist sourced from https://www.youtube.com/playlist?list={playlist.ID}");
             writer.WriteLine("DO NOT MODIFY THIS FILE");

@@ -5,9 +5,41 @@ using TagLib.Id3v2;
 
 namespace YTAutoMusic.Playlist_Files
 {
+    /// <summary>
+    /// Base class for XSPF playlists derivitives
+    /// </summary>
     internal abstract class XspfFile : PlaylistFile
     {
         protected PlaylistBundle bundle;
+
+        /// <summary>
+        /// Output file name such as 'playlist.xspf'
+        /// </summary>
+        public abstract string FileName { get; }
+
+        /// <summary>
+        /// app xml namespace prefix
+        /// </summary>
+        public abstract string Prefix { get; }
+
+        /// <summary>
+        /// url of app xml namespace definition
+        /// </summary>
+        public abstract string NsURL { get; }
+
+        /// <summary>
+        /// url of app playlist definition
+        /// </summary>
+        public abstract string AppPlaylistURL { get; }
+
+        /// <summary>
+        /// url of app track definition
+        /// </summary>
+        public abstract string AppTrackURL { get; }
+
+        public abstract XElement GetPlaylistExtension(XNamespace appNS);
+
+        public abstract XElement GetPlaylistItemExtension(XNamespace appNS, int index);
 
         public override void Build(DirectoryInfo targetDirectory, DirectoryInfo trackDirectory, PlaylistBundle bundle)
         {
@@ -95,18 +127,5 @@ namespace YTAutoMusic.Playlist_Files
             using FileStream stream = new(Path.Combine(targetDirectory.FullName, FileName), FileMode.Create);
             doc.Save(stream);
         }
-
-        public abstract string FileName { get; }
-
-        public abstract string Prefix { get; }
-
-        public abstract string NsURL { get; }
-
-        public abstract string AppPlaylistURL { get; }
-        public abstract string AppTrackURL { get; }
-
-        public abstract XElement GetPlaylistExtension(XNamespace appNS);
-
-        public abstract XElement GetPlaylistItemExtension(XNamespace appNS, int index);
     }
 }

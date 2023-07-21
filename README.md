@@ -9,8 +9,9 @@ A Windows command line YT to mp3 solution that is designed to fill mp3 metadata 
 
 ### Supported playlist files
 Note: these need to be enabled seperately in the config file 'YTAutoMusic.dll.config'
-- VLC (.xspf) -- default
-- AIMP (.xspf)
+- Plain XSPF -- default
+- VLC (.xspf extension)
+- AIMP (.xspf extension)
 
 ## Quick Start
 - Download the latest release in the 'releases' tab

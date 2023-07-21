@@ -108,9 +108,11 @@
         private static (string title, string description, string id) GetInfoFromDescription(FileInfo descriptionFile)
         {
             using var reader = descriptionFile.OpenText();
-            string title = reader.ReadLine();
-            string description = reader.ReadLine();
-            string id = reader.ReadLine();
+            string title = reader.ReadLine().Remove(0, "Title: ".Length);
+            string id = reader.ReadLine().Remove(0, "ID: ".Length);
+            string description = reader.ReadToEnd();
+            description = description.Remove(description.IndexOf($"Playlist sourced from https://www.youtube.com/playlist?list={id}")).Trim();
+
             return (title, description, id);
         }
     }
