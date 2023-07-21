@@ -4,9 +4,9 @@ namespace YTAutoMusic.Metadata_Fillers
 {
     public class SoundtrackMetadata : MetadataBase
     {
-        public override int Priority => 3;
-
         public override string Name => "'soundtrack' config";
+
+        public override string ConfigName => "Soundtrack";
 
         public override bool Fill(TagLib.File tagFile, string title, string description)
         {

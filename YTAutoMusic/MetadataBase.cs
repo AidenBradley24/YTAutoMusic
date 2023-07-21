@@ -3,7 +3,7 @@
     /// <summary>
     /// A meta data filling scheme; Only one can be used per song.
     /// </summary>
-    public abstract class MetadataBase : IComparable<MetadataBase>
+    public abstract class MetadataBase
     {
         /// <summary>
         /// Fill tag file metadata based on an abstract scheme
@@ -16,18 +16,13 @@
         public abstract bool Fill(TagLib.File tagFile, string title, string description);
 
         /// <summary>
-        /// Fillers with a lower value are attempted first
-        /// </summary>
-        public abstract int Priority { get; }
-
-        /// <summary>
         /// Shown name of filler
         /// </summary>
         public abstract string Name { get; }
 
-        public int CompareTo(MetadataBase other)
-        {
-            return Priority.CompareTo(other.Priority);
-        }
+        /// <summary>
+        /// Name inside of config file "'NAME' filler"
+        /// </summary>
+        public abstract string ConfigName { get; }
     }
 }

@@ -9,9 +9,9 @@ namespace YTAutoMusic.Metadata_Fillers
     /// </summary>
     public class ProvidedMetadata : MetadataBase
     {
-        public override int Priority => 0;
-
         public override string Name => "Provided by YT";
+
+        public override string ConfigName => "Provided";
 
         /*
          * Provided to YouTube by INSERTCOMPANYHERE

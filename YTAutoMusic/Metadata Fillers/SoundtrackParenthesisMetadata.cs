@@ -4,9 +4,9 @@ namespace YTAutoMusic.Metadata_Fillers
 {
     public class SoundtrackParenthesisMetadata : MetadataBase
     {
-        public override int Priority => 2;
-
         public override string Name => "'soundtrack parenthesis' config";
+
+        public override string ConfigName => "Soundtrack parenthesis";
 
         public override bool Fill(TagLib.File tagFile, string title, string description)
         {

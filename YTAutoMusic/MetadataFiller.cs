@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using System.Configuration;
+using System.Globalization;
 
 namespace YTAutoMusic
 {
@@ -11,7 +13,7 @@ namespace YTAutoMusic
 
         public MetadataFiller()
         {
-            fillers = GetAllFillers();
+            fillers = GetFillers();
         }
 
         public void Fill(MusicBundle bundle, TagLib.File tagFile)
@@ -42,7 +44,7 @@ namespace YTAutoMusic
             }
         }
 
-        private static IEnumerable<MetadataBase> GetAllFillers()
+        private static IEnumerable<MetadataBase> GetFillers()
         {
             List<MetadataBase> fillers = new();
             IEnumerable<Type> metadataFillerTypes = Assembly.GetAssembly(typeof(MetadataBase)).GetTypes().
@@ -53,9 +55,9 @@ namespace YTAutoMusic
                 fillers.Add((MetadataBase)Activator.CreateInstance(type));
             }
 
-            fillers.Sort();
-
-            return fillers;
+            fillers.RemoveAll(f => string.IsNullOrWhiteSpace(ConfigurationManager.AppSettings.Get($"'{f.ConfigName}' filler")));
+            return fillers.OrderBy(f =>
+            int.Parse(ConfigurationManager.AppSettings.Get($"'{f.ConfigName}' filler"), NumberStyles.Integer, CultureInfo.InvariantCulture));
         }
     }
 }

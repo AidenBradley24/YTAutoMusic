@@ -4,9 +4,9 @@ namespace YTAutoMusic.Metadata_Fillers
 {
     public class MusicKeywordMetadata : MetadataBase
     {
-        public override int Priority => 4;
+        public override string Name => "'music keyword' config";
 
-        public override string Name => "'music description' config";
+        public override string ConfigName => "Music keyword";
 
         public override bool Fill(TagLib.File tagFile, string title, string description)
         {
@@ -17,7 +17,7 @@ namespace YTAutoMusic.Metadata_Fillers
                 var possibleLines = lines.Where(l => l.StartsWith(usedWord, StringComparison.InvariantCultureIgnoreCase));
                 if (!possibleLines.Any())
                 {
-                    throw new FormatException("Not real 'music description'");
+                    throw new FormatException("Not real 'music keyword'");
                 }
 
                 string titleLine = possibleLines.First();
@@ -30,7 +30,7 @@ namespace YTAutoMusic.Metadata_Fillers
 
                 if (!title.Contains(t))
                 {
-                    throw new FormatException("Not real 'music description'");
+                    throw new FormatException("Not real 'music keyword'");
                 }
 
                 if (string.IsNullOrWhiteSpace(a))

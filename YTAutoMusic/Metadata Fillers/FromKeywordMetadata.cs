@@ -2,11 +2,11 @@
 
 namespace YTAutoMusic.Metadata_Fillers
 {
-    public class FromMetadata : MetadataBase
+    public class FromKeywordMetadata : MetadataBase
     {
-        public override int Priority => 1;
+        public override string Name => "'from keyword' config";
 
-        public override string Name => "'from' config";
+        public override string ConfigName => "From keyword";
 
         public override bool Fill(TagLib.File tagFile, string title, string description)
         {
@@ -14,7 +14,7 @@ namespace YTAutoMusic.Metadata_Fillers
             {
                 if (!title.Contains($"({usedWord}", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    throw new FormatException("Not real 'from' config");
+                    throw new FormatException("Not real 'from keyword' config");
                 }
 
                 string[] bits = title.Split("(", StringSplitOptions.TrimEntries);
