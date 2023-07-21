@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <RepositoryUrl>https://github.com/AidenBradley24/youtube-music-downloader</RepositoryUrl>
+        <RepositoryUrl>https://github.com/AidenBradley24/YTAutoMusic</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>youtube-downloader;music-playlist</PackageTags>
         <Description>Automaticly download and format a YouTube playlist as mp3 files and create a VLC playlist.</Description>
@@ -13,6 +13,10 @@
         <Title>YTAutoMusic</Title>
         <StartupObject>YTAutoMusic.Program</StartupObject>
         <SignAssembly>False</SignAssembly>
+        <ApplicationIcon>Resources\logo.ico</ApplicationIcon>
+        <AssemblyVersion>1.4.0</AssemblyVersion>
+        <FileVersion>1.4.0</FileVersion>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DebugType>full</DebugType>
@@ -21,6 +25,13 @@
         <DebugType>full</DebugType>
     </PropertyGroup>
     <ItemGroup>
+      <Content Include="Resources\logo.ico" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="..\LICENSE">
+          <Pack>True</Pack>
+          <PackagePath>\</PackagePath>
+        </None>
         <None Include="..\README.md">
             <Pack>True</Pack>
             <PackagePath>\</PackagePath>
