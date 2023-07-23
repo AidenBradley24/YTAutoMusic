@@ -6,7 +6,7 @@ using TagLib.Id3v2;
 namespace YTAutoMusic.Playlist_Files
 {
     /// <summary>
-    /// Base class for XSPF playlists derivitives
+    /// Base class for XSPF playlists derivatives
     /// </summary>
     internal abstract class XspfFile : PlaylistFile
     {
@@ -45,13 +45,13 @@ namespace YTAutoMusic.Playlist_Files
         {
             this.bundle = bundle;
 
-            string header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><playlist xmlns=\"http://xspf.org/ns/0/\"";
+            string header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\"";
 
             bool hasApp = !string.IsNullOrWhiteSpace(Prefix);
 
             if (hasApp)
             {
-                header += $" xmlns:{Prefix} =\"{NsURL}\" version=\"1\"";
+                header += $" xmlns:{Prefix}=\"{NsURL}\"";
             }
             
             header += "></playlist>";
