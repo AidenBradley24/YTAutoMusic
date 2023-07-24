@@ -155,5 +155,65 @@ namespace YTAutoMusicTests.Metadata_Filler_Tests
             Assert.Equal("Song Name", tagFile.Tag.Title);
             Assert.Equal("Random Soundtrack", tagFile.Tag.Album);
         }
+
+        [Fact]
+        public void NoNameTrack_1()
+        {
+            var tagFile = TagFileCreater.CreateTemp();
+            var data = new SoundtrackMetadata();
+
+            string title = "Track #1 - Random OST";
+            string description = "nonsense";
+
+            Assert.True(data.Fill(tagFile, title, description));
+
+            Assert.Equal("Track #1 - Random Soundtrack", tagFile.Tag.Title);
+            Assert.Equal("Random Soundtrack", tagFile.Tag.Album);
+        }
+
+        [Fact]
+        public void NoNameTrack_2()
+        {
+            var tagFile = TagFileCreater.CreateTemp();
+            var data = new SoundtrackMetadata();
+
+            string title = "Random OST - Track #1";
+            string description = "nonsense";
+
+            Assert.True(data.Fill(tagFile, title, description));
+
+            Assert.Equal("Track #1 - Random Soundtrack", tagFile.Tag.Title);
+            Assert.Equal("Random Soundtrack", tagFile.Tag.Album);
+        }
+
+        [Fact]
+        public void PrepositionWithNumber_1()
+        {
+            var tagFile = TagFileCreater.CreateTemp();
+            var data = new SoundtrackMetadata();
+
+            string title = "Up to 4 - Random OST";
+            string description = "nonsense";
+
+            Assert.True(data.Fill(tagFile, title, description));
+
+            Assert.Equal("Up to 4", tagFile.Tag.Title);
+            Assert.Equal("Random Soundtrack", tagFile.Tag.Album);
+        }
+
+        [Fact]
+        public void NumberInMiddle()
+        {
+            var tagFile = TagFileCreater.CreateTemp();
+            var data = new SoundtrackMetadata();
+
+            string title = "Walking 4 Dogs - Random OST";
+            string description = "nonsense";
+
+            Assert.True(data.Fill(tagFile, title, description));
+
+            Assert.Equal("Walking 4 Dogs", tagFile.Tag.Title);
+            Assert.Equal("Random Soundtrack", tagFile.Tag.Album);
+        }
     }
 }

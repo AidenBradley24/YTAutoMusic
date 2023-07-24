@@ -8,10 +8,13 @@ namespace YTAutoMusic.Metadata_Fillers
 
         public override string ConfigName => "Soundtrack";
 
+        private TagLib.File tagFile;
+
         public override bool Fill(TagLib.File tagFile, string title, string description)
         {
             if (IsStandaloneWord("OST", title, out string usedWord) || IsStandaloneWord("O.S.T", title, out usedWord) || IsStandaloneWord("Soundtrack", title, out usedWord))
             {
+                this.tagFile = tagFile;
                 var bits = title.Split(SEPERATORS, StringSplitOptions.RemoveEmptyEntries);
 
                 int i;
@@ -77,9 +80,7 @@ namespace YTAutoMusic.Metadata_Fillers
                     {
                         if (i == blacklist) continue;
 
-                        string bit = bits[i].Trim(' ', '\n', '\t', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
-                        bit = bit.TrimEnd('(');
-                        bit = bit.TrimStart(')');
+                        string bit = ProcessTitle(bits[i]);
 
                         if (string.IsNullOrWhiteSpace(bit) || IsNumberBody(bit))
                         {
@@ -98,9 +99,7 @@ namespace YTAutoMusic.Metadata_Fillers
                         {
                             if (i == blacklist) continue;
 
-                            string bit = bits[i].Trim(' ', '\n', '\t', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
-                            bit = bit.TrimEnd('(');
-                            bit = bit.TrimStart(')');
+                            string bit = ProcessTitle(bits[i]);
 
                             if (string.IsNullOrWhiteSpace(bit) || IsNumberBody(bit))
                             {
@@ -128,6 +127,36 @@ namespace YTAutoMusic.Metadata_Fillers
             }
 
             return false;
+        }
+
+        private string ProcessTitle(string bit)
+        {
+            bit = bit.Trim();
+            var words = bit.Split(' ', '\t', '\r');
+
+            if (StartsWithStandaloneWord("track", bit, out _) || 
+                StartsWithStandaloneWord("song", bit, out _) || 
+                StartsWithStandaloneWord("part", bit, out _))
+            {
+
+                if (words.Length > 1 && IsNumberBody(words[1]))
+                {
+                    return $"{bit} - {tagFile.Tag.Album}";
+                }
+            }
+
+            bit = bit.TrimStart('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+
+            if (words.Length >= 2 && IsNumberBody(words[^1]) && !Contains(PREPOSITIONS, words[^2]))
+            {
+                bit = bit.TrimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+            }
+
+            bit = bit.TrimEnd('(');
+            bit = bit.TrimStart(')');
+
+
+            return bit;
         }
     }
 }
