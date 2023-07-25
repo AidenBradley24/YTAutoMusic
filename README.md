@@ -1,5 +1,5 @@
 # YTAutoMusic
-A Windows command line YT to mp3 solution that is designed to fill mp3 metadata based on YT descriptions.
+A Windows command line YT to mp3 solution that is designed to fill mp3 metadata based on YouTube descriptions.
 
 ## Features (Given a YT playlist URL automatically...)
 - Download YouTube playlists to mp3 files
@@ -9,11 +9,15 @@ A Windows command line YT to mp3 solution that is designed to fill mp3 metadata 
 
 ### Supported playlist files
 Note: these need to be enabled seperately in the config file 'YTAutoMusic.dll.config'
-- XSPF -- default
-- M3U8 -- default
-- M3U
+- XSPF -- enabled by default
+- M3U8 (absolute path) -- enabled by default
+- M3U8 (local path)
+- M3U8 (url)
 - VLC (.xspf extension)
 - AIMP (.xspf extension)
+
+Most programs will support the default playlist files. XSPF is prefered as it works the same in most programs. Extensions are supported but necessary.
+M3U8 will probably work on anything else, however, the spec for M3U8 is not standardized so you may need to experiment with different modes.
 
 ## Quick Start
 - Download the latest release in the 'releases' tab
