@@ -1,6 +1,8 @@
 # YTAutoMusic
 A Windows command line YT to mp3 solution that is designed to fill mp3 metadata based on YouTube descriptions.
 
+[Check out a more complete version here!](https://github.com/AidenBradley24/LocalPlaylistMaster)
+
 ## Features (Given a YT playlist URL automatically...)
 - Download YouTube playlists to mp3 files
 - Create a playlist file
